@@ -2,7 +2,9 @@ import { BookEntry, BookVolume, IIIFAnnotation, IIIFAnnotationPage, IIIFCanvas, 
 import { promises as fs } from "fs";
 import path from "path";
 
-const BASE_URL: string = "https://toyjack.github.io/toho-html-data";
+const url = process.env.NEXT_PUBLIC_VERCEL_URL || 'localhost:3000'
+
+const BASE_URL: string = `https://${url}`;
 const IMAGE_SERVICE_BASE_URL: string = "https://iiif.toyjack.net/iiif";
 const OUTPUT_DIR = "./docs"; // Directory to save manifests
 
@@ -17,7 +19,7 @@ export class IIIFManifestGenerator {
    * Generate a IIIF manifest for a single book
    */
   generateManifest(book: BookEntry): IIIFManifest {
-    const manifestId = `${BASE_URL}/manifests/${book.id}.json`;
+    const manifestId = `${BASE_URL}/manifest/${book.id}.json`;
 
     // Create metadata entries
     const metadata = [
