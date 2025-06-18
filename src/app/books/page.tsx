@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { tohoData } from '@/constants/TohoData';
 import { AvailableBook } from '@/constants/AvailableBook';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 type SortOption = 'title' | 'category' | 'dynasty' | 'bookType';
 type FilterState = {
@@ -20,12 +21,15 @@ type FilterState = {
 const ITEMS_PER_PAGE = 12;
 
 export default function BooksPage() {
+  const searchParams = useSearchParams();
+  const category = searchParams.get('category') || '';
+
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>('title');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filters, setFilters] = useState<FilterState>({
     search: '',
-    category: '',
+    category: category,
     dynasty: '',
     bookType: '',
     hasSeals: null,
@@ -426,6 +430,8 @@ export default function BooksPage() {
                             <div className="badge badge-warning badge-xs">殘</div>
                           )}
                         </div>
+
+                        <Link href={`/manifest/${book.id}/manifest.json`} className='btn btn-ghost btn-info btn-sm'>Manifest</Link>
                         
                         {isAvailable ? (
                           <Link href={`/viewer?book=${book.id}`} className="btn btn-primary btn-sm">

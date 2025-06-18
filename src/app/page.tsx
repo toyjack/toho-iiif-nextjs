@@ -139,7 +139,7 @@ export default function Home() {
               ];
               
               return (
-                <div key={category} className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow cursor-pointer group">
+                <Link key={category} href={`/books?category=${category}`} className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow cursor-pointer group">
                   <div className="card-body items-center text-center p-6">
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,7 +149,7 @@ export default function Home() {
                     <h3 className="card-title text-lg">{category}</h3>
                     <p className="text-sm text-base-content/70">{bookCount} 部</p>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -175,7 +175,7 @@ export default function Home() {
               ];
               
               return (
-                <div key={category} className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow cursor-pointer group">
+                <Link key={category} href={`/books?category=${category}`} className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow cursor-pointer group">
                   <div className="card-body items-center text-center p-6">
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,7 +185,7 @@ export default function Home() {
                     <h3 className="card-title text-lg">{category}</h3>
                     <p className="text-sm text-base-content/70">{bookCount} 部</p>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
