@@ -2,3 +2,60 @@
 
 @plugin "daisyui";
 
+@plugin "daisyui/theme" {
+  name: "chinese-classics";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  /* Base colors - traditional Chinese paper and ink */
+  --color-base-100: oklch(97% 0.01 50); /* Warm rice paper white */
+  --color-base-200: oklch(94% 0.02 45); /* Aged paper cream */
+  --color-base-300: oklch(90% 0.03 40); /* Antique parchment */
+  --color-base-content: oklch(18% 0.02 260); /* Traditional ink black */
+
+  /* Primary - Imperial gold */
+  --color-primary: oklch(68% 0.15 85); /* Refined imperial gold */
+  --color-primary-content: oklch(15% 0.02 85);
+
+  /* Secondary - Jade green */
+  --color-secondary: oklch(55% 0.12 160); /* Classical jade */
+  --color-secondary-content: oklch(95% 0.01 160);
+
+  /* Accent - Vermillion red */
+  --color-accent: oklch(58% 0.20 25); /* Traditional Chinese red */
+  --color-accent-content: oklch(95% 0.01 25);
+
+  /* Neutral - Scholar's ink */
+  --color-neutral: oklch(35% 0.03 250); /* Subtle ink gray */
+  --color-neutral-content: oklch(95% 0.01 250);
+
+  /* Info - Sky blue */
+  --color-info: oklch(60% 0.15 230); /* Porcelain blue */
+  --color-info-content: oklch(95% 0.01 230);
+
+  /* Success - Bamboo green */
+  --color-success: oklch(62% 0.18 140); /* Fresh bamboo */
+  --color-success-content: oklch(95% 0.01 140);
+
+  /* Warning - Autumn persimmon */
+  --color-warning: oklch(72% 0.16 70); /* Persimmon orange */
+  --color-warning-content: oklch(15% 0.02 70);
+
+  /* Error - Cinnabar red */
+  --color-error: oklch(55% 0.22 15); /* Traditional cinnabar */
+  --color-error-content: oklch(95% 0.01 15);
+
+  /* Classical Chinese styling */
+  --radius-selector: 0.125rem; /* Minimal radius for classical feel */
+  --radius-field: 0.25rem; /* Subtle rounded corners */
+  --radius-box: 0.375rem; /* Gentle box rounding */
+
+  --size-selector: 0.125rem;
+  --size-field: 0.125rem;
+
+  --border: 1px; /* Delicate borders like brush strokes */
+
+  --depth: 1; /* Subtle shadows like paper texture */
+  --noise: 0; /* Clean, scholarly appearance */
+}

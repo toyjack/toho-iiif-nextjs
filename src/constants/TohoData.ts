@@ -1,4 +1,6 @@
-export default {
+import { LibraryData } from "@/types";
+
+export const tohoData ={
   metadata: {
     title: "東方學デジタル圖書館",
     totalBooks: 335,
@@ -30293,4 +30295,4 @@ export default {
       "50+": 7,
     },
   },
-} as const;
+} as LibraryData;
