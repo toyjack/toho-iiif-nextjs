@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import HeaderComp from "./components/header";
+import FooterComp from "./components/footer";
 
 export const metadata: Metadata = {
   title: "東方學デジタル圖書館",
@@ -13,9 +15,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body
-      >
-        {children}
+      <body>
+        <div className="min-h-screen bg-base-100">
+          {/* 导航栏 */}
+          <HeaderComp />
+          {children}
+          <FooterComp />
+        </div>
       </body>
     </html>
   );
