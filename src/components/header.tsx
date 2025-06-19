@@ -1,49 +1,48 @@
 import Link from "next/link";
-import React from "react";
 
 function HeaderComp() {
   return (
     <div className="navbar bg-base-100 shadow-sm border-b border-base-200">
       <div className="navbar-start">
         <Link href="/" className="btn btn-ghost text-xl font-bold text-primary">
-          <span className="hidden sm:inline">東方學デジタル圖書館</span>
-          <span className="sm:hidden">東方學</span>
+          <span className="hidden sm:inline">東方学デジタル図書館</span>
+          <span className="sm:hidden">東デジ</span>
         </Link>
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
           <li>
             <Link href="/" className="font-medium">
-              首頁
+              ホーム
             </Link>
           </li>
           <li>
             <Link href="/books" className="font-medium text-primary">
-              古籍瀏覽
+              漢籍一覧
             </Link>
           </li>
-          <li>
+          {/* <li>
             <Link href="/viewer" className="font-medium">
-              閱讀器
+              ビューア
             </Link>
-          </li>
+          </li> */}
           <li>
             <Link href="/about" className="font-medium">
-              關於我們
+              このサイトについて
             </Link>
           </li>
         </ul>
       </div>
-      <div className="navbar-end">
+      {/* <div className="navbar-end">
         <div className="breadcrumbs text-sm">
           <ul>
             <li>
-              <Link href="/">首頁</Link>
+              <Link href="/">ホーム</Link>
             </li>
-            <li>古籍瀏覽</li>
+            <li>漢籍一覧</li>
           </ul>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

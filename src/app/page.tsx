@@ -1,36 +1,35 @@
 import { AvailableBook } from "@/constants/AvailableBook";
 import { tohoData } from "@/constants/TohoData";
 import Link from "next/link";
-import HeaderComp from "../components/header";
 
 export default function Home() {
-  // 获取古籍统计信息
+  // 古書統計情報を取得
   const totalBooks = tohoData.metadata.totalBooks;
   const totalVolumes = tohoData.metadata.totalVolumes;
   const availableBooks = AvailableBook.length;
   const categories = tohoData.metadata.categories;
 
-  // 获取一些示例书籍
+  // サンプル書籍を取得
   const featuredBooks = tohoData.books
     .filter((book) => AvailableBook.includes(book.id))
     .slice(0, 6);
 
   return (
     <>
-      {/* 英雄區塊 */}
+      {/* ヒーローブロック */}
       <div className="hero min-h-96 bg-gradient-to-br from-primary/10 to-secondary/10">
         <div className="hero-content text-center">
           <div className="max-w-4xl">
             <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              東方學デジタル圖書館
+              東方学デジタル図書館
             </h1>
             <p className="text-lg mb-8 text-base-content/80 leading-relaxed">
-              探索古代智慧的數位寶庫。我們致力於保存和傳承珍貴的古籍文獻，
+              古代の知恵のデジタル宝庫を探索しましょう。私たちは貴重な古書文献の保存と継承に努め、
               <br className="hidden sm:block" />
-              讓千年的智慧在數位時代重現光彩。
+              千年の知恵をデジタル時代に再び輝かせます。
             </p>
 
-            {/* 統計卡片 */}
+            {/* 統計カード */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="stat bg-base-100 rounded-lg shadow-sm border border-base-200">
                 <div className="stat-figure text-primary">
@@ -48,9 +47,9 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title">總藏書</div>
+                <div className="stat-title">総蔵書</div>
                 <div className="stat-value text-primary">{totalBooks}</div>
-                <div className="stat-desc">部古籍典藏</div>
+                <div className="stat-desc">部古書コレクション</div>
               </div>
 
               <div className="stat bg-base-100 rounded-lg shadow-sm border border-base-200">
@@ -69,9 +68,9 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title">總卷數</div>
+                <div className="stat-title">総巻数</div>
                 <div className="stat-value text-secondary">{totalVolumes}</div>
-                <div className="stat-desc">卷珍貴文獻</div>
+                <div className="stat-desc">巻貴重文献</div>
               </div>
 
               <div className="stat bg-base-100 rounded-lg shadow-sm border border-base-200">
@@ -96,15 +95,15 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title">可閱覽</div>
+                <div className="stat-title">閲覧可能</div>
                 <div className="stat-value text-accent">{availableBooks}</div>
-                <div className="stat-desc">部開放瀏覽</div>
+                <div className="stat-desc">部公開中</div>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/viewer" className="btn btn-primary btn-lg">
-                開始探索
+              <Link href="/books" className="btn btn-primary btn-lg">
+                漢籍一覧
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 ml-2"
@@ -120,7 +119,7 @@ export default function Home() {
                   />
                 </svg>
               </Link>
-              <button className="btn btn-outline btn-lg">了解更多</button>
+              {/* <button className="btn btn-outline btn-lg">詳しく見る</button> */}
             </div>
           </div>
         </div>
@@ -129,9 +128,9 @@ export default function Home() {
       <div className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">古籍分類</h2>
+            <h2 className="text-3xl font-bold mb-4">漢籍分類</h2>
             <p className="text-base-content/70">
-              按照傳統四部分類，系統整理古代典籍
+              伝統的な四部分類により、古代典籍を系統的に整理
             </p>
           </div>
 
@@ -238,15 +237,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 古籍分類 */}
+      {/* 古書分類 */}
 
-      {/* 精選古籍 */}
+      {/* 厳選古書 */}
       <div className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">精選古籍</h2>
+            <h2 className="text-3xl font-bold mb-4">おすすめの漢籍</h2>
             <p className="text-base-content/70">
-              精心挑選的珍貴典籍，體驗古代文明的魅力
+              厳選された貴重な典籍で、古代文明の魅力を体験
             </p>
           </div>
 
@@ -273,7 +272,7 @@ export default function Home() {
                     </div>
                     {book.authors && book.authors.length > 0 && (
                       <p className="text-base-content/70">
-                        作者：{book.authors.join(", ")}
+                        著者：{book.authors.join(", ")}
                       </p>
                     )}
                     <p className="text-base-content/60 text-xs line-clamp-2">
@@ -284,24 +283,24 @@ export default function Home() {
                     <div className="flex gap-1">
                       {book.bookType === "manuscript" && (
                         <div className="badge badge-outline badge-xs">
-                          手鈔本
+                          手写本
                         </div>
                       )}
                       {book.bookType === "printed" && (
                         <div className="badge badge-outline badge-xs">刊本</div>
                       )}
                       {book.hasSeals && (
-                        <div className="badge badge-outline badge-xs">有印</div>
+                        <div className="badge badge-outline badge-xs">印有</div>
                       )}
                       {book.hasNotes && (
-                        <div className="badge badge-outline badge-xs">有註</div>
+                        <div className="badge badge-outline badge-xs">注有</div>
                       )}
                     </div>
                     <Link
                       href={`/viewer?book=${book.id}`}
                       className="btn btn-primary btn-sm"
                     >
-                      閱覽
+                      閲覧
                     </Link>
                   </div>
                 </div>
@@ -311,7 +310,7 @@ export default function Home() {
 
           <div className="text-center mt-12">
             <Link href="/viewer" className="btn btn-outline btn-lg">
-              查看更多古籍
+              もっと漢籍を見る
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 ml-2"
@@ -331,13 +330,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 特色功能 */}
+      {/* プラットフォームの特色 */}
       <div className="py-16 px-4 bg-base-200/50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">平台特色</h2>
+            <h2 className="text-3xl font-bold mb-4">プラットフォームの特色</h2>
             <p className="text-base-content/70">
-              利用現代技術，提供優質的古籍閱覽體驗
+              IIIF技術を活用し、高品質な古書閲覧体験を提供
             </p>
           </div>
 
@@ -359,9 +358,9 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">智能搜索</h3>
+              <h3 className="text-xl font-bold mb-2">スマート検索</h3>
               <p className="text-base-content/70">
-                支持書名、作者、朝代等多維度搜索，快速找到目標古籍
+                書名、著者、時代など多次元検索をサポート、目標とする古書を素早く発見
               </p>
             </div>
 
@@ -382,9 +381,9 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">高清閱覽</h3>
+              <h3 className="text-xl font-bold mb-2">高画質閲覧</h3>
               <p className="text-base-content/70">
-                採用IIIF標準，提供高解析度圖像和流暢的閱讀體驗
+                IIIF標準を採用し、高解像度画像とスムーズな読書体験を提供
               </p>
             </div>
 
@@ -405,9 +404,9 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">學術研究</h3>
+              <h3 className="text-xl font-bold mb-2">学術研究</h3>
               <p className="text-base-content/70">
-                詳細的書目資訊和版本描述，支持學術研究和文獻考證
+                詳細な書誌情報と版本記述で、学術研究と文献考証をサポート
               </p>
             </div>
           </div>

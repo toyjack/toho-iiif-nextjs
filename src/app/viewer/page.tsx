@@ -1,5 +1,4 @@
 import Link from "next/link";
-import TifyViewer from "./tify";
 import ViewerComp from "./ViewerComp";
 
 type SearchParams = Promise<{ book: string,page: string }>;
@@ -20,11 +19,11 @@ async function ViewerIndexPage({
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-error mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
-            <h2 className="card-title text-error justify-center">Missing Book ID</h2>
-            <p className="text-base-content/70">A valid book ID is required to view the document.</p>
+            <h2 className="card-title text-error justify-center">書籍IDが見つかりません</h2>
+            <p className="text-base-content/70">文書を表示するには有効な書籍IDが必要です。</p>
             <div className="card-actions justify-center mt-4">
               <Link href="/books" className="btn btn-primary">
-                Browse Books
+                書籍一覧に戻る
               </Link>
             </div>
           </div>
@@ -39,7 +38,7 @@ async function ViewerIndexPage({
     <div className="fixed inset-0 bg-base-100 flex items-center justify-center z-50">
         <div className="text-center">
           <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="mt-4 text-base-content/70">Loading document...</p>
+          <p className="mt-4 text-base-content/70">読み込み中...</p>
         </div>
       </div>
   );
@@ -53,12 +52,12 @@ async function ViewerIndexPage({
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Collection
+            コレクションに戻る
           </Link>
         </div>
         
         <div className="navbar-center">
-          <h1 className="text-xl font-bold font-serif">古籍閱讀器</h1>
+          <h1 className="text-xl font-bold font-serif">古書ビューア</h1>
         </div>
         
         <div className="navbar-end">
@@ -69,10 +68,10 @@ async function ViewerIndexPage({
               </svg>
             </div>
             <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow">
-              <li><a>Download</a></li>
-              <li><a>Print</a></li>
-              <li><a>Share</a></li>
-              <li><a>Help</a></li>
+              <li><a>ダウンロード</a></li>
+              <li><a>印刷</a></li>
+              <li><a>共有</a></li>
+              <li><a>ヘルプ</a></li>
             </ul>
           </div>
         </div>
@@ -88,7 +87,7 @@ async function ViewerIndexPage({
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-                Document Viewer
+                文書ビューア
               </div>
             </div>
             
@@ -97,13 +96,13 @@ async function ViewerIndexPage({
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Search
+                検索
               </button>
               <button className="btn btn-ghost btn-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                Bookmark
+                ブックマーク
               </button>
             </div>
           </div>

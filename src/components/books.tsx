@@ -175,9 +175,9 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
     <div className="container mx-auto px-4 py-8">
       {/* 页面标题 */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">古籍收藏</h1>
+        <h1 className="text-4xl font-bold mb-4">漢籍一覧</h1>
         <p className="text-base-content/70">
-          探索 {tohoData.metadata.totalBooks} 部珍貴古籍典藏
+          {tohoData.metadata.totalBooks} 部漢籍が公開されています
         </p>
       </div>
 
@@ -187,23 +187,23 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
           <div className="card bg-base-100 shadow-sm border border-base-200 sticky top-4">
             <div className="card-body">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="card-title text-lg">篩選條件</h2>
+                <h2 className="card-title text-lg">フィルタリング</h2>
                 <button
                   onClick={clearFilters}
                   className="btn btn-ghost btn-sm text-error"
                 >
-                  清除
+                  クレア
                 </button>
               </div>
 
               {/* 搜索框 */}
               <div className="form-control mb-4">
                 <label className="label">
-                  <span className="label-text font-medium">搜索</span>
+                  <span className="label-text font-medium">検索</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="書名、作者、版本信息..."
+                  placeholder="書名、作者、版本など..."
                   className="input input-bordered input-sm"
                   value={filters.search}
                   onChange={(e) => updateFilter("search", e.target.value)}
@@ -213,7 +213,7 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
               {/* 仅显示可浏览 */}
               <div className="form-control mb-4">
                 <label className="label cursor-pointer">
-                  <span className="label-text font-medium">僅顯示可瀏覽</span>
+                  <span className="label-text font-medium">現在閲覧可能</span>
                   <input
                     type="checkbox"
                     className="checkbox checkbox-primary checkbox-sm"
@@ -283,7 +283,7 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
               </div>
 
               {/* 特征筛选 */}
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-medium">特徵篩選</span>
@@ -334,7 +334,7 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
                     <span className="label-text">完整版本</span>
                   </label>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -345,14 +345,14 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-2 text-sm text-base-content/70">
               <span>
-                顯示 {startIndex + 1}-
+                表示中： {startIndex + 1}-
                 {Math.min(
                   startIndex + ITEMS_PER_PAGE,
                   filteredAndSortedBooks.length
                 )}{" "}
-                項，
+                項目，
               </span>
-              <span>共 {filteredAndSortedBooks.length} 項結果</span>
+              <span>合計： {filteredAndSortedBooks.length} 項目</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -362,10 +362,10 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                 >
-                  <option value="title">按書名排序</option>
-                  <option value="category">按分類排序</option>
-                  <option value="dynasty">按朝代排序</option>
-                  <option value="bookType">按版本類型排序</option>
+                  <option value="title">書名順</option>
+                  <option value="category">分類順</option>
+                  <option value="dynasty">朝代順</option>
+                  {/* <option value="bookType">按版本類型排序</option> */}
                 </select>
               </div>
 
@@ -436,7 +436,7 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
                       </h3>
                       {isAvailable && (
                         <div className="badge badge-success badge-sm">
-                          可瀏覽
+                          閲覧可能
                         </div>
                       )}
                     </div>
@@ -506,7 +506,7 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
                         </Link>
                       ) : (
                         <button className="btn btn-disabled btn-sm">
-                          暫不可瀏覽
+                          準備中
                         </button>
                       )}
                     </div>
