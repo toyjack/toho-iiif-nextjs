@@ -1,7 +1,7 @@
 import { AvailableBook } from "@/constants/AvailableBook";
 import { tohoData } from "@/constants/TohoData";
 import Link from "next/link";
-import HeaderComp from "./components/header";
+import HeaderComp from "../components/header";
 
 export default function Home() {
   // 获取古籍统计信息

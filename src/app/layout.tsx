@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import HeaderComp from "./components/header";
-import FooterComp from "./components/footer";
+import HeaderComp from "../components/header";
+import FooterComp from "../components/footer";
 
 export const metadata: Metadata = {
   title: "東方學デジタル圖書館",
