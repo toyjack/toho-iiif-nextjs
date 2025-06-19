@@ -1,8 +1,8 @@
-import React from "react";
 import Link from "next/link";
 import TifyViewer from "./tify";
+import ViewerComp from "./ViewerComp";
 
-type SearchParams = Promise<{ book: string }>;
+type SearchParams = Promise<{ book: string,page: string }>;
 
 async function ViewerIndexPage({
   searchParams,
@@ -10,6 +10,7 @@ async function ViewerIndexPage({
   searchParams: SearchParams;
 }) {
   const book = (await searchParams).book;
+  const page = Number((await searchParams).page || "1");
   
   if (!book) {
     return (
@@ -34,10 +35,19 @@ async function ViewerIndexPage({
 
   const manifestUrl = `/manifest/${book}/manifest.json`;
 
+  const Loading=() => (
+    <div className="fixed inset-0 bg-base-100 flex items-center justify-center z-50">
+        <div className="text-center">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="mt-4 text-base-content/70">Loading document...</p>
+        </div>
+      </div>
+  );
+
   return (
     <div className="min-h-screen bg-base-100">
       {/* Header */}
-      <div className="navbar bg-base-200 shadow">
+      {/* <div className="navbar bg-base-200 shadow">
         <div className="navbar-start">
           <Link href="/books" className="btn btn-ghost">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,10 +76,10 @@ async function ViewerIndexPage({
             </ul>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Book Info Bar */}
-      <div className="bg-base-200/50 border-b border-base-300">
+      {/* <div className="bg-base-200/50 border-b border-base-300">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -98,27 +108,17 @@ async function ViewerIndexPage({
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Viewer Container */}
       <main className="flex-1">
         <div className="h-[calc(100vh-120px)] bg-base-100">
-          <TifyViewer
+          <ViewerComp
             manifestUrl={manifestUrl}
-            iiifPage={1}
+            iiifPage={page}
           />
         </div>
       </main>
-
-      {/* Loading State (you can show this conditionally) */}
-      {/* 
-      <div className="fixed inset-0 bg-base-100 flex items-center justify-center z-50">
-        <div className="text-center">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="mt-4 text-base-content/70">Loading document...</p>
-        </div>
-      </div>
-      */}
     </div>
   );
 }

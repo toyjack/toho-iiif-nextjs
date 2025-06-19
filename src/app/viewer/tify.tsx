@@ -5,7 +5,6 @@ import "tify";
 import { useEffect } from "react";
 
 export default function TifyViewer({ manifestUrl, iiifPage }: { manifestUrl: string, iiifPage: number }) {
-
   useEffect(() => {
     // @ts-expect-error Tify is not typed
     const Tify = window.Tify;
