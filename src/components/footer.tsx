@@ -40,7 +40,7 @@ function FooterComp() {
           <div className="grid grid-flow-col gap-4">
             <Link className="link link-hover" href={`/about`}>このサイトについて</Link>
             {/* <a className="link link-hover" href="#">お問い合わせ</a> */}
-            <a className="link link-hover" href="/sitepolicy">利用規約</a>
+            <Link className="link link-hover" href="/sitepolicy">利用規約</Link>
             {/* <a className="link link-hover" href="#">プライバシーポリシー</a> */}
           </div>
         </nav>
