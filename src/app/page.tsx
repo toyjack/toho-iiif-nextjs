@@ -318,7 +318,7 @@ export default function Home() {
 
           <div className="text-center mt-12">
             <Link href="/viewer" className="btn btn-outline btn-lg">
-              もっと漢籍を見る
+              漢籍一覧へ
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 ml-2"
