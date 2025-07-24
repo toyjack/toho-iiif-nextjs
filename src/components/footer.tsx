@@ -11,14 +11,36 @@ function FooterComp() {
             </svg>
           </div>
           <p className="font-bold text-lg">東方学IIIF図書館</p>
-          <p className="text-base-content/70">京都大学人文科学研究所附属人文情報学創新センター</p>
-          <p className="text-sm text-base-content/60">© 2024 INSTITUTE FOR RESEARCH IN HUMANITIES, KYOTO UNIVERSITY. All rights reserved.</p>
+          <p className="text-base-content/70">
+          <Link href="https://www.ciih.zinbun.kyoto-u.ac.jp/" target="_blank" rel="noopener noreferrer" className="link link-primary">
+            京都大学人文科学研究所附属人文情報学創新センター
+          </Link>
+          </p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-base-content/60">© 2025 INSTITUTE FOR RESEARCH IN HUMANITIES, KYOTO UNIVERSITY.</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-base-content/60">本サイトの漢籍コンテンツは</span>
+              <a 
+                href="https://creativecommons.org/licenses/by/4.0/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-base-content/60 hover:text-primary transition-colors"
+              >
+                
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM6.5 14.5h-1V11c0-.55.45-1 1-1s1 .45 1 1v3.5zm0-5.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5.5 5.5h-1v-2c0-.55-.45-1-1-1s-1 .45-1 1v2H8V11c0-1.66 1.34-3 3-3s3 1.34 3 3v3.5z"/>
+                </svg>
+                CC BY 4.0
+              </a>
+              <span className="text-xs text-base-content/60">でライセンスされています</span>
+            </div>
+          </div>
         </aside>
         <nav>
           <div className="grid grid-flow-col gap-4">
             <Link className="link link-hover" href={`/about`}>このサイトについて</Link>
             {/* <a className="link link-hover" href="#">お問い合わせ</a> */}
-            <a className="link link-hover" href="#">利用規約</a>
+            <a className="link link-hover" href="/sitepolicy">利用規約</a>
             {/* <a className="link link-hover" href="#">プライバシーポリシー</a> */}
           </div>
         </nav>

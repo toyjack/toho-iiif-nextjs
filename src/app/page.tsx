@@ -6,7 +6,6 @@ export default function Home() {
   // 古書統計情報を取得
   const totalBooks = tohoData.metadata.totalBooks;
   const totalVolumes = tohoData.metadata.totalVolumes;
-  const availableBooks = AvailableBook.length;
   const categories = tohoData.metadata.categories;
   const availableImagesCount = tohoData.books.map((book) => {
     return book.structure?.map((volume) => {
@@ -14,11 +13,10 @@ export default function Home() {
     }).reduce((acc, cur) => acc + cur, 0) || 0;
   }).reduce((acc, cur) => acc + (cur || 0), 0);
 
-  console.log("Available Images Count:", availableImagesCount);
-
-  // サンプル書籍を取得
-  const featuredBooks = tohoData.books
+  // ランダムな6部書籍を取得
+  const randomBooks = tohoData.books
     .filter((book) => AvailableBook.includes(book.id))
+    .sort(() => Math.random() - 0.5)
     .slice(0, 6);
 
   return (
@@ -31,9 +29,12 @@ export default function Home() {
               東方学IIIF図書館
             </h1>
             <p className="text-lg mb-8 text-base-content/80 leading-relaxed">
-              古代の知恵のデジタル宝庫を探索しましょう。私たちは貴重な古書文献の保存と継承に努め、
-              <br className="hidden sm:block" />
-              千年の知恵をデジタル時代に再び輝かせます。
+              <Link href="https://www.zinbun.kyoto-u.ac.jp/" target="_blank" rel="noopener noreferrer" className="link link-primary">
+                京都大学人文科学研究所
+              </Link>
+              が提供する、東アジア古典籍のデジタル図書館です。
+              {/* <br className="hidden sm:block" /> */}
+              
             </p>
 
             {/* 統計カード */}
@@ -252,12 +253,12 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">おすすめの漢籍</h2>
             <p className="text-base-content/70">
-              厳選された貴重な典籍で、古代文明の魅力を体験
+              ランダムな6部の漢籍をご紹介します
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredBooks.map((book) => (
+            {randomBooks.map((book) => (
               <div
                 key={book.id}
                 className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-lg transition-all duration-300 group"
