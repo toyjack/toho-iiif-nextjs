@@ -5,7 +5,7 @@ function HeaderComp() {
     <div className="navbar bg-base-100 shadow-sm border-b border-base-200">
       <div className="navbar-start">
         <Link href="/" className="btn btn-ghost text-xl font-bold text-primary">
-          <span className="hidden sm:inline">東方学デジタル図書館</span>
+          <span className="hidden sm:inline">東方学IIIF図書館</span>
           <span className="sm:hidden">東デジ</span>
         </Link>
       </div>

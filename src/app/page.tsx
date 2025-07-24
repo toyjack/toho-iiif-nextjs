@@ -8,6 +8,13 @@ export default function Home() {
   const totalVolumes = tohoData.metadata.totalVolumes;
   const availableBooks = AvailableBook.length;
   const categories = tohoData.metadata.categories;
+  const availableImagesCount = tohoData.books.map((book) => {
+    return book.structure?.map((volume) => {
+      return Number(volume.maxPage);
+    }).reduce((acc, cur) => acc + cur, 0) || 0;
+  }).reduce((acc, cur) => acc + (cur || 0), 0);
+
+  console.log("Available Images Count:", availableImagesCount);
 
   // サンプル書籍を取得
   const featuredBooks = tohoData.books
@@ -21,7 +28,7 @@ export default function Home() {
         <div className="hero-content text-center">
           <div className="max-w-4xl">
             <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              東方学デジタル図書館
+              東方学IIIF図書館
             </h1>
             <p className="text-lg mb-8 text-base-content/80 leading-relaxed">
               古代の知恵のデジタル宝庫を探索しましょう。私たちは貴重な古書文献の保存と継承に努め、
@@ -48,8 +55,8 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="stat-title">総蔵書</div>
-                <div className="stat-value text-primary">{totalBooks}</div>
-                <div className="stat-desc">部古書コレクション</div>
+                <div className="stat-value text-primary">{new Intl.NumberFormat().format(totalBooks)}</div>
+                <div className="stat-desc">漢籍</div>
               </div>
 
               <div className="stat bg-base-100 rounded-lg shadow-sm border border-base-200">
@@ -69,8 +76,8 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="stat-title">総巻数</div>
-                <div className="stat-value text-secondary">{totalVolumes}</div>
-                <div className="stat-desc">巻貴重文献</div>
+                <div className="stat-value text-secondary">{new Intl.NumberFormat().format(totalVolumes)}</div>
+                <div className="stat-desc">巻</div>
               </div>
 
               <div className="stat bg-base-100 rounded-lg shadow-sm border border-base-200">
@@ -95,9 +102,9 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title">閲覧可能</div>
-                <div className="stat-value text-accent">{availableBooks}</div>
-                <div className="stat-desc">部公開中</div>
+                <div className="stat-title">公開画像数</div>
+                <div className="stat-value text-accent">{new Intl.NumberFormat().format(availableImagesCount)}</div>
+                <div className="stat-desc">枚</div>
               </div>
             </div>
 
