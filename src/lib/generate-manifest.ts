@@ -1,12 +1,9 @@
 import { BookEntry, BookVolume, IIIFAnnotation, IIIFAnnotationPage, IIIFCanvas, IIIFManifest, LibraryData } from "@/types";
-import { promises as fs } from "fs";
-import path from "path";
 
 const url = process.env.NEXT_PUBLIC_VERCEL_URL || 'localhost:3000'
 
 const BASE_URL: string = `https://${url}`;
-const IMAGE_SERVICE_BASE_URL: string = "https://iiif.toyjack.net/iiif";
-const OUTPUT_DIR = "./docs"; // Directory to save manifests
+const IMAGE_SERVICE_BASE_URL: string = "https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif";
 
 
 export class IIIFManifestGenerator {
@@ -124,18 +121,18 @@ export class IIIFManifestGenerator {
       requiredStatement: {
         label: { en: ["Attribution"], zh: ["歸屬"] },
         value: {
-          zh: ["東方學数字圖書館"],
-          ja: ["東方學デジタル圖書館"],
-          en: ["Oriental Studies Digital Library"],
+          zh: ["東方學IIIF圖書館"],
+          ja: ["東方学IIIF図書館"],
+          // en: ["Oriental Studies Digital Library"],
         },
       },
-      rights: "http://creativecommons.org/licenses/by-nc/4.0/",
+      rights: "http://creativecommons.org/licenses/by/4.0/",
       provider: [
         {
           id: BASE_URL,
           type: "Agent",
           label: {
-            ja: ["東方學デジタル圖書館"],
+            ja: ["東方学IIIF図書館"],
             // "en": ["Oriental Studies Digital Library"]
           },
           homepage: [
@@ -143,7 +140,7 @@ export class IIIFManifestGenerator {
               id: BASE_URL,
               type: "Text",
               label: {
-                ja: ["東方學デジタル圖書館"],
+                ja: ["東方学IIIF図書館"],
                 // "en": ["Oriental Studies Digital Library"]
               },
               format: "text/html",
