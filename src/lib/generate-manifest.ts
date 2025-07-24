@@ -16,7 +16,7 @@ export class IIIFManifestGenerator {
    * Generate a IIIF manifest for a single book
    */
   generateManifest(book: BookEntry): IIIFManifest {
-    const manifestId = `${BASE_URL}/manifest/${book.id}.json`;
+    const manifestId = `${BASE_URL}/manifest/${book.id}/manifest.json`;
 
     // Create metadata entries
     const metadata = [
