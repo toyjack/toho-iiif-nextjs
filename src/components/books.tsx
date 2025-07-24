@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { LibraryData } from "@/types";
+import { NuNumber } from "@/constants/NuNumber";
 
 type SortOption = "title" | "category" | "dynasty" | "bookType";
 type FilterState = {
@@ -17,13 +18,15 @@ type FilterState = {
   onlyAvailable: boolean;
 };
 
-const ITEMS_PER_PAGE = 12;
-
-export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryData, AvailableBook: string[]}) {
+export default function BooksComp({
+  tohoData,
+  AvailableBook,
+}: {
+  tohoData: LibraryData;
+  AvailableBook: string[];
+}) {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") || "";
-
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("title");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [filters, setFilters] = useState<FilterState>({
@@ -131,18 +134,6 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
     return filtered;
   }, [filters, sortBy, sortOrder]);
 
-  // 分页计算
-  const totalPages = Math.ceil(filteredAndSortedBooks.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedBooks = filteredAndSortedBooks.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
-
-  // 重置页码当筛选条件改变时
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters, sortBy, sortOrder]);
 
   const updateFilter = (key: keyof FilterState, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -344,14 +335,6 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
           {/* 工具栏 */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-2 text-sm text-base-content/70">
-              <span>
-                表示中： {startIndex + 1}-
-                {Math.min(
-                  startIndex + ITEMS_PER_PAGE,
-                  filteredAndSortedBooks.length
-                )}{" "}
-                項目，
-              </span>
               <span>合計： {filteredAndSortedBooks.length} 項目</span>
             </div>
 
@@ -412,8 +395,9 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
 
           {/* 书籍网格 */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-            {paginatedBooks.map((book) => {
+            {filteredAndSortedBooks.map((book) => {
               const isAvailable = AvailableBook.includes(book.id);
+              const hasNuNumber = Object.keys(NuNumber).includes(book.id);
               return (
                 <div
                   key={book.id}
@@ -490,12 +474,23 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
                         )}
                       </div>
 
-                      <Link
+                      {/* <Link
                         href={`/manifest/${book.id}/manifest.json`}
                         className="btn btn-ghost btn-info btn-sm"
                       >
                         Manifest
-                      </Link>
+                      </Link> */}
+
+                      {hasNuNumber && (
+                        <Link
+                          href={`http://kanji.zinbun.kyoto-u.ac.jp/kanseki?record=data/FA019705/tagged/${NuNumber[book.id as keyof typeof NuNumber]}.dat&back=1`}
+                          className="btn btn-ghost btn-info btn-sm"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          全国漢籍DB
+                        </Link>
+                      )}
 
                       {isAvailable ? (
                         <Link
@@ -516,57 +511,6 @@ export default function BooksComp({tohoData, AvailableBook}: {tohoData: LibraryD
             })}
           </div>
 
-          {/* 分页 */}
-          {totalPages > 1 && (
-            <div className="flex justify-center">
-              <div className="join">
-                <button
-                  className="join-item btn btn-sm"
-                  disabled={currentPage === 1}
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                >
-                  «
-                </button>
-
-                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 7) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 4) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 3) {
-                    pageNum = totalPages - 6 + i;
-                  } else {
-                    pageNum = currentPage - 3 + i;
-                  }
-
-                  return (
-                    <button
-                      key={pageNum}
-                      className={`join-item btn btn-sm ${
-                        currentPage === pageNum ? "btn-active" : ""
-                      }`}
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-
-                <button
-                  className="join-item btn btn-sm"
-                  disabled={currentPage === totalPages}
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
-                >
-                  »
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
