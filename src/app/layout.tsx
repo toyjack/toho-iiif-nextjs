@@ -17,7 +17,6 @@ export default function RootLayout({
     <html lang="ja">
       <body>
         <div className="min-h-screen bg-base-100">
-          {/* 导航栏 */}
           <HeaderComp />
           {children}
           <FooterComp />

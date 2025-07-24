@@ -6,7 +6,7 @@ function HeaderComp() {
       <div className="navbar-start">
         <Link href="/" className="btn btn-ghost text-xl font-bold text-primary">
           <span className="hidden sm:inline">東方学IIIF図書館</span>
-          <span className="sm:hidden">東デジ</span>
+          <span className="sm:hidden">東IIIF</span>
         </Link>
       </div>
       <div className="navbar-center hidden lg:flex">
@@ -21,11 +21,11 @@ function HeaderComp() {
               漢籍一覧
             </Link>
           </li>
-          {/* <li>
-            <Link href="/viewer" className="font-medium">
-              ビューア
+          <li>
+            <Link href="/sitepolicy" className="font-medium">
+              利用規約
             </Link>
-          </li> */}
+          </li>
           <li>
             <Link href="/about" className="font-medium">
               このサイトについて
