@@ -7,11 +7,20 @@ export default function Home() {
   const totalBooks = tohoData.metadata.totalBooks;
   const totalVolumes = tohoData.metadata.totalVolumes;
   const categories = tohoData.metadata.categories;
-  const availableImagesCount = tohoData.books.map((book) => {
-    return book.structure?.map((volume) => {
-      return Number(volume.maxPage);
-    }).reduce((acc, cur) => acc + cur, 0) || 0;
-  }).reduce((acc, cur) => acc + (cur || 0), 0);
+  const availableImagesCount = tohoData.books
+    .filter((book) => {
+      return AvailableBook.includes(book.id);
+    })
+    .map((book) => {
+      return (
+        book.structure
+          ?.map((volume) => {
+            return Number(volume.maxPage);
+          })
+          .reduce((acc, cur) => acc + cur, 0) || 0
+      );
+    })
+    .reduce((acc, cur) => acc + (cur || 0), 0);
 
   // ランダムな6部書籍を取得
   const randomBooks = tohoData.books
@@ -29,12 +38,16 @@ export default function Home() {
               東方学IIIF図書館
             </h1>
             <p className="text-lg mb-8 text-base-content/80 leading-relaxed">
-              <Link href="https://www.zinbun.kyoto-u.ac.jp/" target="_blank" rel="noopener noreferrer" className="link link-primary">
+              <Link
+                href="https://www.zinbun.kyoto-u.ac.jp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link link-primary"
+              >
                 京都大学人文科学研究所
               </Link>
               が提供する、東アジア古典籍のデジタル図書館です。
               {/* <br className="hidden sm:block" /> */}
-              
             </p>
 
             {/* 統計カード */}
@@ -56,8 +69,10 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="stat-title">総蔵書</div>
-                <div className="stat-value text-primary">{new Intl.NumberFormat().format(totalBooks)}</div>
-                <div className="stat-desc">漢籍</div>
+                <div className="stat-value text-primary">
+                  {new Intl.NumberFormat().format(totalBooks)}
+                </div>
+                <div className="stat-desc">点漢籍</div>
               </div>
 
               <div className="stat bg-base-100 rounded-lg shadow-sm border border-base-200">
@@ -77,7 +92,9 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="stat-title">総巻数</div>
-                <div className="stat-value text-secondary">{new Intl.NumberFormat().format(totalVolumes)}</div>
+                <div className="stat-value text-secondary">
+                  {new Intl.NumberFormat().format(totalVolumes)}
+                </div>
                 <div className="stat-desc">巻</div>
               </div>
 
@@ -103,8 +120,10 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="stat-title">公開画像数</div>
-                <div className="stat-value text-accent">{new Intl.NumberFormat().format(availableImagesCount)}</div>
+                <div className="stat-title">総画像数</div>
+                <div className="stat-value text-accent">
+                  {new Intl.NumberFormat().format(availableImagesCount)}
+                </div>
                 <div className="stat-desc">枚</div>
               </div>
             </div>
