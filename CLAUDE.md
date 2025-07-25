@@ -28,7 +28,7 @@ pnpm lint
 
 - **IIIF Manifest Generator** (`src/lib/generate-manifest.ts`): Central class that generates IIIF Presentation API 3.0 compliant manifests from book data
 - **API Routes**: 
-  - `/api/manifest/[manifestId]/manifest.json` - Serves IIIF manifests for individual books
+  - `/manifest/[manifestId]/manifest.json` - Serves IIIF manifests for individual books
 - **Pages**:
   - Homepage (`src/app/page.tsx`) - Main landing page
   - Viewer (`src/app/viewer/page.tsx`) - Book viewer interface
@@ -50,8 +50,8 @@ pnpm lint
 
 ### External Dependencies
 
-- **Image Service**: `https://iiif.toyjack.net/iiif` - External IIIF image server
-- **Data Source**: `https://toyjack.github.io/toho-html-data` - Base URL for manifest serving
+- **Image Service**: `https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif` - External IIIF image server hosted by Kyoto University
+- **Custom Viewer**: `tify` fork from `github:toyjack/tify#dev` - Modified IIIF viewer for East Asian texts
 
 ### Configuration
 
@@ -59,3 +59,17 @@ The application uses minimal configuration with standard Next.js setup. Key sett
 - Language set to Japanese (`ja`) in root layout
 - Uses pnpm for package management
 - Turbopack enabled for development
+
+### Important Constants
+
+- **NuNumber**: Constant defined in homepage for book ID handling
+- **BASE_URL**: Dynamically set from `NEXT_PUBLIC_VERCEL_URL` or defaults to `localhost:3000`
+- **Image Service Base**: Points to Kyoto University's IIIF server
+
+### IIIF Manifest Structure
+
+The application generates IIIF Presentation API 3.0 compliant manifests with:
+- Multilingual metadata (Chinese, Japanese, English labels)
+- Right-to-left viewing direction for East Asian texts
+- Multi-volume support with proper canvas sequencing
+- CORS headers enabled for external viewer compatibility
