@@ -33,7 +33,7 @@ export class IIIFManifestGenerator {
     // Add authors if available
     if (book.authors && book.authors.length > 0) {
       metadata.push({
-        label: { en: ["Author(s)"], zh: ["作者"] },
+        label: { en: ["Author(s)"], zh: ["著者"] },
         value: { zh: book.authors },
       });
     }
@@ -49,7 +49,7 @@ export class IIIFManifestGenerator {
     // Add publication info
     if (book.publicationInfo) {
       metadata.push({
-        label: { en: ["Publication Info"], zh: ["版本信息"] },
+        label: { en: ["Publication Info"], zh: ["出版信息"] },
         value: { zh: [book.publicationInfo] },
       });
     }
@@ -110,12 +110,12 @@ export class IIIFManifestGenerator {
       type: "Manifest",
       label: {
         zh: [book.title],
-        en: [book.title],
+        // en: [book.title],
       },
       metadata,
       summary: {
         zh: [book.publicationInfo || ""],
-        en: [book.publicationInfo || ""],
+        // en: [book.publicationInfo || ""],
       },
       viewingDirection: "right-to-left",
       requiredStatement: {
@@ -133,6 +133,7 @@ export class IIIFManifestGenerator {
           type: "Agent",
           label: {
             ja: ["東方学IIIF図書館"],
+            zh: ["東方学IIIF図書館"],
             // "en": ["Oriental Studies Digital Library"]
           },
           homepage: [
@@ -141,6 +142,7 @@ export class IIIFManifestGenerator {
               type: "Text",
               label: {
                 ja: ["東方学IIIF図書館"],
+                zh: ["東方学IIIF図書館"],
                 // "en": ["Oriental Studies Digital Library"]
               },
               format: "text/html",
@@ -192,11 +194,11 @@ export class IIIFManifestGenerator {
         width,
         service: [
           {
-            "@id": `${IMAGE_SERVICE_BASE_URL}/${book.id}%2F${book.id}${String(
+            id: `${IMAGE_SERVICE_BASE_URL}/${book.id}%2F${book.id}${String(
               pageNum
             ).padStart(4, "0")}`,
-            "@type": "ImageService2",
-            profile: "http://iiif.io/api/image/2/level2.json",
+            type: "ImageService3",
+            profile: "http://iiif.io/api/image/3/level2.json",
           },
         ],
       },
@@ -214,7 +216,7 @@ export class IIIFManifestGenerator {
       type: "Canvas",
       label: {
         zh: [pageLabel],
-        en: [pageLabel],
+        // en: [pageLabel],
       },
       height,
       width,

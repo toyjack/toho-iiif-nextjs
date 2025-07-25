@@ -59,9 +59,9 @@ export interface IIIFAnnotation {
     height: number;
     width: number;
     service?: Array<{
-      "@id": string;
-      "@type": "ImageService2";
-      profile: "http://iiif.io/api/image/2/level2.json";
+      id: string;
+      type: "ImageService3";
+      profile: "http://iiif.io/api/image/3/level2.json";
     }>;
   };
   target: string;
