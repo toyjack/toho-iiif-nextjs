@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 function HeaderComp() {
+  const pathname = usePathname();
+  console.log("Current pathname:", pathname);
   return (
     <div className="navbar bg-base-100 shadow-sm border-b border-base-200">
       <div className="navbar-start">
@@ -12,22 +17,42 @@ function HeaderComp() {
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
           <li>
-            <Link href="/" className="font-medium">
+            <Link
+              href="/"
+              className={`font-medium ${
+                pathname === "/" ? "text-primary" : ""
+              }`}
+            >
               ホーム
             </Link>
           </li>
           <li>
-            <Link href="/books" className="font-medium text-primary">
+            <Link
+              href="/books"
+              className={`font-medium ${
+                pathname === "/books" ? "text-primary" : ""
+              }`}
+            >
               漢籍一覧
             </Link>
           </li>
           <li>
-            <Link href="/sitepolicy" className="font-medium">
+            <Link
+              href="/sitepolicy"
+              className={`font-medium ${
+                pathname === "/sitepolicy" ? "text-primary" : ""
+              }`}
+            >
               利用規約
             </Link>
           </li>
           <li>
-            <Link href="/about" className="font-medium">
+            <Link
+              href="/about"
+              className={`font-medium ${
+                pathname === "/about" ? "text-primary" : ""
+              }`}
+            >
               このサイトについて
             </Link>
           </li>
