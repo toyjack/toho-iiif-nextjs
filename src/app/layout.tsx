@@ -4,8 +4,8 @@ import HeaderComp from "../components/header";
 import FooterComp from "../components/footer";
 
 export const metadata: Metadata = {
-  title: "東方學デジタル圖書館",
-  description: "探索古代智慧的數位寶庫 - 收藏豐富的古籍、手稿和歷史文獻",
+  title: "東方学IIIF図書館",
+  description: "京都大学人文科学研究所が提供する、東アジア古典籍のデジタル図書館です。",
 };
 
 export default function RootLayout({
