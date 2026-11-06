@@ -19,21 +19,22 @@
 
 ## 开发与验证
 
-使用 pnpm 和现有 `pnpm-lock.yaml`，不要混用其他包管理器或生成额外锁文件。
+使用 Bun（版本见 `package.json` 的 `packageManager`）和现有 `bun.lock`，不要混用其他包管理器或生成额外锁文件。开发、构建与生产运行都在 Bun 运行时上进行（脚本使用 `bun --bun next …`）。
 
 | 命令 | 用途 |
 | --- | --- |
-| `pnpm install --frozen-lockfile` | 按锁文件安装依赖 |
-| `pnpm dev` | 启动 Turbopack 开发服务器 |
-| `pnpm build` | 生产构建 |
-| `pnpm start` | 启动已构建的应用 |
-| `pnpm exec tsc --noEmit` | 类型检查，需要已安装依赖及 Next.js 生成的类型 |
+| `bun install --frozen-lockfile` | 按锁文件安装依赖 |
+| `bun run dev` | 启动 Turbopack 开发服务器 |
+| `bun run build` | 生产构建 |
+| `bun run start` | 启动已构建的应用 |
+| `bun run typecheck` | 类型检查（`tsc --noEmit`），需要已安装依赖及 Next.js 生成的类型 |
 
-- 当前没有自动化测试脚本或测试框架。`pnpm lint` 虽已定义为 `next lint`，但仓库未配置 ESLint 依赖或配置文件；不要把它当作已可用的检查。
+- 需要执行安装脚本的依赖须列入 `package.json` 的 `trustedDependencies`；Bun 默认不运行依赖的生命周期脚本。
+- 当前没有自动化测试脚本或测试框架。`bun run lint` 虽已定义为 `next lint`，但仓库未配置 ESLint 依赖或配置文件；不要把它当作已可用的检查。
 - 修改应用代码后执行相关类型检查和生产构建；说明遇到的既有错误、缺失依赖或环境限制。仅修改文档时检查差异与引用即可。
 - 书目或 IIIF 相关修改需验证：书目列表、已知 ID 的 manifest、未知 ID 的 404，以及阅读器加载与翻页；多卷逻辑变更还需检查卷册边界。
 - UI 修改检查桌面和窄屏效果，并保留日文界面与现有主题。
-- `next.config.ts` 使用 `output: "standalone"`；Dockerfile 基于 Node 18 Alpine，运行独立输出的 `server.js`。仓库未通过 `engines` 或 `packageManager` 固定开发环境版本。
+- `next.config.ts` 使用 `output: "standalone"`；Dockerfile 基于固定版本的 `oven/bun` Alpine 镜像，以 `bun server.js` 运行独立输出；升级 Bun 时同步修改 `packageManager`、`engines` 与 Dockerfile 的镜像标签。
 
 ## 实现约定与注意事项
 
