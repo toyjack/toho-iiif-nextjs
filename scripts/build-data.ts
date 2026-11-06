@@ -7,14 +7,18 @@
  *
  * Usage: bun scripts/build-data.ts
  */
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { z } from "zod";
+import { parseVariantTable } from "../src/lib/search/variants";
 
 const root = join(import.meta.dir, "..");
 const dataDir = join(root, "data");
 const booksDir = join(dataDir, "books");
-const outFile = join(root, "src", "generated", "books.json");
+const generatedDir = join(root, "src", "generated");
+const outFile = join(generatedDir, "books.json");
+const variantsFile = join(dataDir, "variants", "variants.tsv");
+const variantsOut = join(generatedDir, "variants.json");
 
 const positiveInt = z.number().int().positive();
 
@@ -150,6 +154,17 @@ for (const name of readdirSync(booksDir).filter((f) => f.endsWith(".md")).sort()
 
 if (books.length === 0) errors.push("data/books: no books found");
 
+// --- variant table (optional) ---
+let variants: Record<string, string> = {};
+let variantGroups = 0;
+if (existsSync(variantsFile)) {
+  const table = parseVariantTable(readFileSync(variantsFile, "utf8"), "data/variants/variants.tsv");
+  errors.push(...table.errors);
+  warnings.push(...table.warnings);
+  variants = table.map;
+  variantGroups = table.groups;
+}
+
 for (const warning of warnings) console.warn(`warning: ${warning}`);
 if (errors.length > 0) {
   for (const error of errors) console.error(`error: ${error}`);
@@ -168,8 +183,9 @@ const output = {
   books,
 };
 
-mkdirSync(join(root, "src", "generated"), { recursive: true });
+mkdirSync(generatedDir, { recursive: true });
 writeFileSync(outFile, `${JSON.stringify(output)}\n`);
+writeFileSync(variantsOut, `${JSON.stringify(variants)}\n`);
 console.log(
-  `build-data: ${books.length} books, ${output.metadata.totalVolumes} volumes, ${warnings.length} warning(s) → src/generated/books.json`
+  `build-data: ${books.length} books, ${output.metadata.totalVolumes} volumes, ${variantGroups} variant group(s), ${warnings.length} warning(s) → src/generated/`
 );

@@ -1,162 +1,132 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { LibraryData } from "@/types";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { BookSummary } from "@/lib/books";
+import { buildIndex, search, suggest, type Suggestion } from "@/lib/search/search";
+import type { VariantMap } from "@/lib/search/variants";
+import SearchBox from "./search-box";
 
-type SortOption = "title" | "category" | "dynasty" | "bookType";
-type FilterState = {
-  search: string;
-  category: string;
-  dynasty: string;
-  bookType: string;
-  hasSeals: boolean | null;
-  hasNotes: boolean | null;
-  isIncomplete: boolean | null;
-  onlyAvailable: boolean;
+type SortOption = "relevance" | "title" | "category" | "dynasty";
+
+/** Query-string keys for every piece of list state. */
+const PARAM = {
+  q: "q",
+  category: "category",
+  dynasty: "dynasty",
+  bookType: "type",
+  available: "available",
+  sort: "sort",
+  order: "order",
+} as const;
+
+const BOOK_TYPE_LABELS: Record<string, string> = {
+  manuscript: "手鈔本",
+  printed: "刊本",
+  rubbing: "拓本",
+  unknown: "未知",
 };
+const getBookTypeLabel = (type: string) => BOOK_TYPE_LABELS[type] || type;
 
 export default function BooksComp({
-  tohoData,
+  books,
+  totalBooks,
 }: {
-  tohoData: LibraryData;
+  books: BookSummary[];
+  totalBooks: number;
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const category = searchParams.get("category") || "";
-  const [sortBy, setSortBy] = useState<SortOption>("title");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [filters, setFilters] = useState<FilterState>({
-    search: "",
-    category: category,
-    dynasty: "",
-    bookType: "",
-    hasSeals: null,
-    hasNotes: null,
-    isIncomplete: null,
-    onlyAvailable: false,
-  });
 
-  // 获取所有独特的过滤选项
-  const filterOptions = useMemo(() => {
-    const categories = [
-      ...new Set(tohoData.books.map((book) => book.category)),
-    ].sort();
-    const dynasties = [
-      ...new Set(tohoData.books.map((book) => book.dynasty).filter(Boolean)),
-    ].sort();
-    const bookTypes = [
-      ...new Set(tohoData.books.map((book) => book.bookType)),
-    ].sort();
-    return { categories, dynasties, bookTypes };
+  // The URL is the source of truth for filters, so they survive reload and back.
+  const q = searchParams.get(PARAM.q) ?? "";
+  const category = searchParams.get(PARAM.category) ?? "";
+  const dynasty = searchParams.get(PARAM.dynasty) ?? "";
+  const bookType = searchParams.get(PARAM.bookType) ?? "";
+  const onlyAvailable = searchParams.get(PARAM.available) === "1";
+  const sortParam = searchParams.get(PARAM.sort) as SortOption | null;
+  const sortOrder = searchParams.get(PARAM.order) === "desc" ? "desc" : "asc";
+
+  // The input keeps its own state so IME composition is never interrupted;
+  // it follows the URL when that changes from outside (back/forward).
+  const [input, setInput] = useState(q);
+  useEffect(() => setInput(q), [q]);
+
+  const updateParams = (changes: Partial<Record<keyof typeof PARAM, string | null>>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(changes)) {
+      const name = PARAM[key as keyof typeof PARAM];
+      if (value) params.set(name, value);
+      else params.delete(name);
+    }
+    const qs = params.toString();
+    // replaceState keeps typing out of the history and is synced with useSearchParams.
+    window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+  };
+
+  // Variant table is loaded after first paint; search works without it meanwhile.
+  const [variants, setVariants] = useState<VariantMap>({});
+  useEffect(() => {
+    import("@/generated/variants.json").then((m) => setVariants(m.default as VariantMap));
   }, []);
 
-  // 过滤和排序书籍
-  const filteredAndSortedBooks = useMemo(() => {
-    let filtered = tohoData.books.filter((book) => {
-      // 搜索过滤
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        const matchesSearch =
-          book.title.toLowerCase().includes(searchTerm) ||
-          book.authors.some((author) =>
-            author.toLowerCase().includes(searchTerm)
-          ) ||
-          book.publicationInfo.toLowerCase().includes(searchTerm) ||
-          book.collectionInfo.toLowerCase().includes(searchTerm);
-        if (!matchesSearch) return false;
-      }
+  const index = useMemo(() => buildIndex(books, variants), [books, variants]);
 
-      // 分类过滤
-      if (filters.category && book.category !== filters.category) return false;
+  const filterOptions = useMemo(() => {
+    const unique = (values: Array<string | undefined>) =>
+      [...new Set(values.filter((v): v is string => Boolean(v)))];
+    return {
+      categories: unique(books.map((b) => b.category)), // keep data order (經史子集…)
+      dynasties: unique(books.map((b) => b.dynasty)).sort(),
+      bookTypes: unique(books.map((b) => b.bookType)).sort(),
+    };
+  }, [books]);
 
-      // 朝代过滤
-      if (filters.dynasty && book.dynasty !== filters.dynasty) return false;
+  const query = input.trim();
+  const sortBy: SortOption = sortParam ?? (query ? "relevance" : "title");
 
-      // 版本类型过滤
-      if (filters.bookType && book.bookType !== filters.bookType) return false;
-
-      // 印章过滤
-      if (filters.hasSeals !== null && book.hasSeals !== filters.hasSeals)
-        return false;
-
-      // 注释过滤
-      if (filters.hasNotes !== null && book.hasNotes !== filters.hasNotes)
-        return false;
-
-      // 完整性过滤
-      if (
-        filters.isIncomplete !== null &&
-        book.isIncomplete !== filters.isIncomplete
-      )
-        return false;
-
-      // 仅显示可浏览的书籍
-      if (filters.onlyAvailable && !book.available)
-        return false;
-
+  const results = useMemo(() => {
+    const hits = search(index, query, variants).filter(({ book }) => {
+      if (category && book.category !== category) return false;
+      if (dynasty && book.dynasty !== dynasty) return false;
+      if (bookType && book.bookType !== bookType) return false;
+      if (onlyAvailable && !book.available) return false;
       return true;
     });
-
-    // 排序
-    filtered.sort((a, b) => {
-      let aValue: string, bValue: string;
-
-      switch (sortBy) {
-        case "title":
-          aValue = a.title;
-          bValue = b.title;
-          break;
-        case "category":
-          aValue = a.category;
-          bValue = b.category;
-          break;
-        case "dynasty":
-          aValue = a.dynasty || "";
-          bValue = b.dynasty || "";
-          break;
-        case "bookType":
-          aValue = a.bookType;
-          bValue = b.bookType;
-          break;
-        default:
-          aValue = a.title;
-          bValue = b.title;
-      }
-
-      const comparison = aValue.localeCompare(bValue);
-      return sortOrder === "asc" ? comparison : -comparison;
+    if (sortBy === "relevance" && query) {
+      return sortOrder === "asc" ? hits : [...hits].reverse();
+    }
+    const key = (b: BookSummary) =>
+      sortBy === "category" ? b.category : sortBy === "dynasty" ? b.dynasty ?? "" : b.title;
+    return [...hits].sort((a, b) => {
+      const c = key(a.book).localeCompare(key(b.book));
+      return sortOrder === "asc" ? c : -c;
     });
+  }, [index, query, variants, category, dynasty, bookType, onlyAvailable, sortBy, sortOrder]);
 
-    return filtered;
-  }, [filters, sortBy, sortOrder]);
+  const suggestions = useMemo(() => suggest(index, query, variants), [index, query, variants]);
 
-
-  const updateFilter = (key: keyof FilterState, value: any) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const onSelect = (s: Suggestion<BookSummary>) => {
+    if (s.type === "title") {
+      if (s.book.available) {
+        router.push(`/viewer?book=${encodeURIComponent(s.book.id)}`);
+        return;
+      }
+      setInput(s.value);
+      updateParams({ q: s.value });
+    } else if (s.type === "author") {
+      setInput(s.value);
+      updateParams({ q: s.value });
+    } else {
+      setInput("");
+      updateParams({ q: null, [s.type]: s.value });
+    }
   };
 
   const clearFilters = () => {
-    setFilters({
-      search: "",
-      category: "",
-      dynasty: "",
-      bookType: "",
-      hasSeals: null,
-      hasNotes: null,
-      isIncomplete: null,
-      onlyAvailable: false,
-    });
-  };
-
-  const getBookTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      manuscript: "手鈔本",
-      printed: "刊本",
-      rubbing: "拓本",
-      unknown: "未知",
-    };
-    return labels[type] || type;
+    setInput("");
+    window.history.replaceState(null, "", window.location.pathname);
   };
 
   return (
@@ -165,14 +135,14 @@ export default function BooksComp({
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">漢籍一覧</h1>
         <p className="text-base-content/70">
-          {tohoData.metadata.totalBooks} 部漢籍が公開されています
+          {totalBooks} 部漢籍が公開されています
         </p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* 侧边栏筛选器 */}
         <div className="lg:w-80 flex-shrink-0">
-          <div className="card bg-base-100 shadow-sm border border-base-200 sticky top-4">
+          <div className="card bg-base-100 shadow-sm border border-base-200 lg:sticky lg:top-4">
             <div className="card-body">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="card-title text-lg">フィルタリング</h2>
@@ -180,7 +150,7 @@ export default function BooksComp({
                   onClick={clearFilters}
                   className="btn btn-ghost btn-sm text-error"
                 >
-                  クレア
+                  クリア
                 </button>
               </div>
 
@@ -189,13 +159,19 @@ export default function BooksComp({
                 <label className="label">
                   <span className="label-text font-medium">検索</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="書名、作者、版本など..."
-                  className="input input-bordered input-sm"
-                  value={filters.search}
-                  onChange={(e) => updateFilter("search", e.target.value)}
+                <SearchBox
+                  value={input}
+                  onChange={(value) => {
+                    setInput(value);
+                    updateParams({ q: value.trim() || null });
+                  }}
+                  suggestions={suggestions}
+                  onSelect={onSelect}
+                  placeholder="書名、著者、版本など..."
                 />
+                <p className="mt-1 text-xs text-base-content/50">
+                  異体字も検索されます。複数語はスペースで区切ります。
+                </p>
               </div>
 
               {/* 仅显示可浏览 */}
@@ -205,10 +181,8 @@ export default function BooksComp({
                   <input
                     type="checkbox"
                     className="checkbox checkbox-primary checkbox-sm"
-                    checked={filters.onlyAvailable}
-                    onChange={(e) =>
-                      updateFilter("onlyAvailable", e.target.checked)
-                    }
+                    checked={onlyAvailable}
+                    onChange={(e) => updateParams({ available: e.target.checked ? "1" : null })}
                   />
                 </label>
               </div>
@@ -220,13 +194,13 @@ export default function BooksComp({
                 </label>
                 <select
                   className="select select-bordered select-sm"
-                  value={filters.category}
-                  onChange={(e) => updateFilter("category", e.target.value)}
+                  value={category}
+                  onChange={(e) => updateParams({ category: e.target.value || null })}
                 >
                   <option value="">全部分類</option>
-                  {filterOptions.categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
+                  {filterOptions.categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
                     </option>
                   ))}
                 </select>
@@ -239,13 +213,13 @@ export default function BooksComp({
                 </label>
                 <select
                   className="select select-bordered select-sm"
-                  value={filters.dynasty}
-                  onChange={(e) => updateFilter("dynasty", e.target.value)}
+                  value={dynasty}
+                  onChange={(e) => updateParams({ dynasty: e.target.value || null })}
                 >
                   <option value="">全部朝代</option>
-                  {filterOptions.dynasties.map((dynasty) => (
-                    <option key={dynasty} value={dynasty}>
-                      {dynasty}
+                  {filterOptions.dynasties.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
                     </option>
                   ))}
                 </select>
@@ -258,8 +232,8 @@ export default function BooksComp({
                 </label>
                 <select
                   className="select select-bordered select-sm"
-                  value={filters.bookType}
-                  onChange={(e) => updateFilter("bookType", e.target.value)}
+                  value={bookType}
+                  onChange={(e) => updateParams({ bookType: e.target.value || null })}
                 >
                   <option value="">全部類型</option>
                   {filterOptions.bookTypes.map((type) => (
@@ -269,60 +243,6 @@ export default function BooksComp({
                   ))}
                 </select>
               </div>
-
-              {/* 特征筛选 */}
-              {/* <div className="space-y-3">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-medium">特徵篩選</span>
-                  </label>
-                </div>
-
-                <div className="form-control">
-                  <label className="label cursor-pointer justify-start gap-3">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-sm"
-                      checked={filters.hasSeals === true}
-                      onChange={(e) =>
-                        updateFilter("hasSeals", e.target.checked ? true : null)
-                      }
-                    />
-                    <span className="label-text">有印章</span>
-                  </label>
-                </div>
-
-                <div className="form-control">
-                  <label className="label cursor-pointer justify-start gap-3">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-sm"
-                      checked={filters.hasNotes === true}
-                      onChange={(e) =>
-                        updateFilter("hasNotes", e.target.checked ? true : null)
-                      }
-                    />
-                    <span className="label-text">有註釋</span>
-                  </label>
-                </div>
-
-                <div className="form-control">
-                  <label className="label cursor-pointer justify-start gap-3">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-sm"
-                      checked={filters.isIncomplete === false}
-                      onChange={(e) =>
-                        updateFilter(
-                          "isIncomplete",
-                          e.target.checked ? false : null
-                        )
-                      }
-                    />
-                    <span className="label-text">完整版本</span>
-                  </label>
-                </div>
-              </div> */}
             </div>
           </div>
         </div>
@@ -332,7 +252,7 @@ export default function BooksComp({
           {/* 工具栏 */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-2 text-sm text-base-content/70">
-              <span>合計： {filteredAndSortedBooks.length} 項目</span>
+              <span>合計： {results.length} 項目</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -340,20 +260,19 @@ export default function BooksComp({
                 <select
                   className="select select-bordered select-sm"
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  onChange={(e) => updateParams({ sort: e.target.value })}
                 >
+                  {query && <option value="relevance">関連度順</option>}
                   <option value="title">書名順</option>
                   <option value="category">分類順</option>
                   <option value="dynasty">朝代順</option>
-                  {/* <option value="bookType">按版本類型排序</option> */}
                 </select>
               </div>
 
               <button
                 className="btn btn-ghost btn-sm"
-                onClick={() =>
-                  setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
-                }
+                aria-label={sortOrder === "asc" ? "降順にする" : "昇順にする"}
+                onClick={() => updateParams({ order: sortOrder === "asc" ? "desc" : null })}
               >
                 {sortOrder === "asc" ? (
                   <svg
@@ -390,9 +309,15 @@ export default function BooksComp({
             </div>
           </div>
 
+          {results.length === 0 && (
+            <div className="py-16 text-center text-base-content/60">
+              条件に一致する漢籍はありません。
+            </div>
+          )}
+
           {/* 书籍网格 */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-            {filteredAndSortedBooks.map((book) => {
+            {results.map(({ book, viaVariant }) => {
               const isAvailable = book.available;
               const nuNumber = book.nuNumber;
               return (
@@ -435,6 +360,9 @@ export default function BooksComp({
                         <span className="badge badge-outline badge-sm">
                           {getBookTypeLabel(book.bookType)}
                         </span>
+                        {query && viaVariant && (
+                          <span className="badge badge-ghost badge-sm">異体字で一致</span>
+                        )}
                       </div>
 
                       {book.authors && book.authors.length > 0 && (
@@ -471,13 +399,6 @@ export default function BooksComp({
                         )}
                       </div>
 
-                      {/* <Link
-                        href={`/manifest/${book.id}/manifest.json`}
-                        className="btn btn-ghost btn-info btn-sm"
-                      >
-                        Manifest
-                      </Link> */}
-
                       {nuNumber && (
                         <Link
                           href={`http://kanji.zinbun.kyoto-u.ac.jp/kanseki?record=data/FA019705/tagged/${nuNumber}.dat&back=1`}
@@ -507,7 +428,6 @@ export default function BooksComp({
               );
             })}
           </div>
-
         </div>
       </div>
     </div>

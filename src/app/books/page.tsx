@@ -1,12 +1,15 @@
 import BooksComp from '@/components/books'
 import  { Suspense } from 'react'
-import { library } from "@/lib/books";
+import { bookSummaries, library } from "@/lib/books";
 
 
 function BooksPage() {
   return (
     <Suspense>
-      <BooksComp tohoData={library}/>
+      <BooksComp
+        books={bookSummaries()}
+        totalBooks={library.metadata.totalBooks}
+      />
     </Suspense>
   )
 }

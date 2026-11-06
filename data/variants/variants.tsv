@@ -1,0 +1,12 @@
+# 异体字对照表（示例，待替换为正式表）。格式：
+#   standard<TAB>variants（半角空格分隔）<TAB>source<TAB>note
+#   每项必须正好是 1 个字；一行为一个等价组（双向）；同一字出现在多行时自动合并。
+#   standard 只决定内部代表字，不影响页面显示。
+standard	variants	source	note
+清	淸		示例
+說	説		示例
+錄	録		示例
+教	敎		示例
+卷	巻		示例
+冊	册		示例
+真	眞		示例
