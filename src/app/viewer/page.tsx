@@ -1,48 +1,70 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import ViewerComp from "./ViewerComp";
 import BackButton from "@/components/back-button";
+import { getBook } from "@/lib/books";
+import { getImageNumbers } from "@/lib/generate-manifest";
+import { firstParam as first, parsePage } from "@/lib/viewer-params";
 
-type SearchParams = Promise<{ book: string,page: string }>;
+type SearchParams = Promise<{
+  book?: string | string[];
+  page?: string | string[];
+}>;
+
+function Notice({ title, message }: { title: string; message: string }) {
+  return (
+    <div className="min-h-screen bg-base-100 flex items-center justify-center px-4">
+      <div className="card bg-base-200 shadow-lg">
+        <div className="card-body text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-error mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h2 className="card-title text-error justify-center">{title}</h2>
+          <p className="text-base-content/70">{message}</p>
+          <div className="card-actions justify-center mt-4">
+            <Link href="/books" className="btn btn-primary">
+              漢籍一覧に戻る
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 async function ViewerIndexPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const book = (await searchParams).book;
-  const page = Number((await searchParams).page || "1");
-  
-  if (!book) {
+  const params = await searchParams;
+  const bookId = first(params.book)?.trim();
+
+  if (!bookId) {
     return (
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
-        <div className="card bg-base-200 shadow-lg">
-          <div className="card-body text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-error mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-            <h2 className="card-title text-error justify-center">漢籍のIDが見つかりません</h2>
-            <p className="text-base-content/70">画像を表示するには有効な漢籍IDが必要です。</p>
-            <div className="card-actions justify-center mt-4">
-              <Link href="/books" className="btn btn-primary">
-                漢籍一覧に戻る
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Notice
+        title="漢籍のIDが見つかりません"
+        message="画像を表示するには有効な漢籍IDが必要です。"
+      />
     );
   }
 
-  const manifestUrl = `/manifest/${book}/manifest.json`;
+  const book = getBook(bookId);
+  if (!book) {
+    notFound();
+  }
 
-  const Loading=() => (
-    <div className="fixed inset-0 bg-base-100 flex items-center justify-center z-50">
-        <div className="text-center">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="mt-4 text-base-content/70">読み込み中...</p>
-        </div>
-      </div>
-  );
+  if (!book.available) {
+    return (
+      <Notice
+        title="この漢籍の画像は準備中です"
+        message={`${book.title}（${book.id}）の画像はまだ公開されていません。`}
+      />
+    );
+  }
+
+  const page = parsePage(first(params.page), getImageNumbers(book).length);
+  const manifestUrl = `/manifest/${encodeURIComponent(book.id)}/manifest.json`;
 
   return (
     <div className="min-h-screen bg-base-100">
@@ -78,7 +100,7 @@ async function ViewerIndexPage({
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="badge badge-primary">漢籍ID: {book}</div>
+              <div className="badge badge-primary">漢籍ID: {book.id}</div>
               <div className="text-sm text-base-content/70">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
