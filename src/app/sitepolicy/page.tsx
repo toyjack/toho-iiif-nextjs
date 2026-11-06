@@ -1,6 +1,6 @@
 function SitePolicyPage() {
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto px-4 pb-12">
       <h1 className="text-3xl font-bold my-8">利用規約</h1>
       <p className="text-base-content/70 mb-4">
         このサイトは、京都大学人文科学研究所附属人文情報学創新センターが提供する東アジア古典籍のデジタル図書館です。

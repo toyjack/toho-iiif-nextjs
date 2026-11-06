@@ -3,9 +3,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const NAV_ITEMS = [
+  { href: "/", label: "ホーム" },
+  { href: "/books", label: "漢籍一覧" },
+  { href: "/sitepolicy", label: "利用規約" },
+  { href: "/about", label: "このサイトについて" },
+];
+
 function HeaderComp() {
   const pathname = usePathname();
-  console.log("Current pathname:", pathname);
+
+  const links = NAV_ITEMS.map(({ href, label }) => {
+    const active = pathname === href;
+    return (
+      <li key={href}>
+        <Link
+          href={href}
+          aria-current={active ? "page" : undefined}
+          className={`font-medium ${active ? "text-primary" : ""}`}
+        >
+          {label}
+        </Link>
+      </li>
+    );
+  });
+
   return (
     <div className="navbar bg-base-100 shadow-sm border-b border-base-200">
       <div className="navbar-start">
@@ -15,59 +37,21 @@ function HeaderComp() {
         </Link>
       </div>
       <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1">
-          <li>
-            <Link
-              href="/"
-              className={`font-medium ${
-                pathname === "/" ? "text-primary" : ""
-              }`}
-            >
-              ホーム
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/books"
-              className={`font-medium ${
-                pathname === "/books" ? "text-primary" : ""
-              }`}
-            >
-              漢籍一覧
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/sitepolicy"
-              className={`font-medium ${
-                pathname === "/sitepolicy" ? "text-primary" : ""
-              }`}
-            >
-              利用規約
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/about"
-              className={`font-medium ${
-                pathname === "/about" ? "text-primary" : ""
-              }`}
-            >
-              このサイトについて
-            </Link>
-          </li>
-        </ul>
+        <ul className="menu menu-horizontal px-1">{links}</ul>
       </div>
-      {/* <div className="navbar-end">
-        <div className="breadcrumbs text-sm">
-          <ul>
-            <li>
-              <Link href="/">ホーム</Link>
-            </li>
-            <li>漢籍一覧</li>
+      <div className="navbar-end lg:hidden">
+        {/* key={pathname} remounts the menu after navigation so it closes. */}
+        <details key={pathname} className="dropdown dropdown-end">
+          <summary className="btn btn-ghost" aria-label="メニュー">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </summary>
+          <ul className="menu dropdown-content bg-base-100 rounded-box z-50 mt-2 w-56 p-2 shadow border border-base-200">
+            {links}
           </ul>
-        </div>
-      </div> */}
+        </details>
+      </div>
     </div>
   );
 }
