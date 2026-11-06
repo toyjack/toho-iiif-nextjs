@@ -11,6 +11,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { basename, join } from "node:path";
 import { z } from "zod";
 import { parseVariantTable } from "../src/lib/search/variants";
+import { buildPinyinDict } from "./pinyin";
 
 const root = join(import.meta.dir, "..");
 const dataDir = join(root, "data");
@@ -19,6 +20,7 @@ const generatedDir = join(root, "src", "generated");
 const outFile = join(generatedDir, "books.json");
 const variantsFile = join(dataDir, "variants", "variants.tsv");
 const variantsOut = join(generatedDir, "variants.json");
+const pinyinOut = join(generatedDir, "pinyin.json");
 
 const positiveInt = z.number().int().positive();
 
@@ -165,6 +167,21 @@ if (existsSync(variantsFile)) {
   variantGroups = table.groups;
 }
 
+// --- pinyin for the fields pinyin search covers (keyed by original text) ---
+const pinyinTexts = books.flatMap((book) => [
+  book.title,
+  ...book.authors,
+  ...book.structure.map((v) => v.title),
+  book.category,
+  ...(book.dynasty ? [book.dynasty] : []),
+]);
+const { dict: pinyinDict, missing: noPinyin } = buildPinyinDict(pinyinTexts, variants);
+if (noPinyin.length > 0) {
+  warnings.push(
+    `no pinyin for ${noPinyin.length} character(s): ${noPinyin.slice(0, 30).join(" ")}${noPinyin.length > 30 ? " …" : ""}`
+  );
+}
+
 for (const warning of warnings) console.warn(`warning: ${warning}`);
 if (errors.length > 0) {
   for (const error of errors) console.error(`error: ${error}`);
@@ -186,6 +203,7 @@ const output = {
 mkdirSync(generatedDir, { recursive: true });
 writeFileSync(outFile, `${JSON.stringify(output)}\n`);
 writeFileSync(variantsOut, `${JSON.stringify(variants)}\n`);
+writeFileSync(pinyinOut, `${JSON.stringify(pinyinDict)}\n`);
 console.log(
   `build-data: ${books.length} books, ${output.metadata.totalVolumes} volumes, ${variantGroups} variant group(s), ${warnings.length} warning(s) → src/generated/`
 );

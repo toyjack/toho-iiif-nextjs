@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { BookSummary } from "@/lib/books";
 import { buildIndex, search, suggest, type Suggestion } from "@/lib/search/search";
+import { isPinyinQuery, type PinyinDict } from "@/lib/search/pinyin";
 import type { VariantMap } from "@/lib/search/variants";
 import SearchBox from "./search-box";
 
@@ -71,7 +72,16 @@ export default function BooksComp({
     import("@/generated/variants.json").then((m) => setVariants(m.default as VariantMap));
   }, []);
 
-  const index = useMemo(() => buildIndex(books, variants), [books, variants]);
+  // Pinyin data is only needed for Latin-letter queries, so load it on first use.
+  const [pinyin, setPinyin] = useState<PinyinDict | null>(null);
+  const wantsPinyin = isPinyinQuery(input);
+  useEffect(() => {
+    if (wantsPinyin && pinyin === null) {
+      import("@/generated/pinyin.json").then((m) => setPinyin(m.default as PinyinDict));
+    }
+  }, [wantsPinyin, pinyin]);
+
+  const index = useMemo(() => buildIndex(books, variants, pinyin ?? {}), [books, variants, pinyin]);
 
   const filterOptions = useMemo(() => {
     const unique = (values: Array<string | undefined>) =>
@@ -170,7 +180,7 @@ export default function BooksComp({
                   placeholder="書名、著者、版本など..."
                 />
                 <p className="mt-1 text-xs text-base-content/50">
-                  異体字も検索されます。複数語はスペースで区切ります。
+                  異体字・拼音（例：zhouyi、zy）でも検索できます。複数語はスペースで区切ります。
                 </p>
               </div>
 
@@ -317,7 +327,7 @@ export default function BooksComp({
 
           {/* 书籍网格 */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-            {results.map(({ book, viaVariant }) => {
+            {results.map(({ book, viaVariant, viaPinyin }) => {
               const isAvailable = book.available;
               const nuNumber = book.nuNumber;
               return (
@@ -362,6 +372,9 @@ export default function BooksComp({
                         </span>
                         {query && viaVariant && (
                           <span className="badge badge-ghost badge-sm">異体字で一致</span>
+                        )}
+                        {query && viaPinyin && (
+                          <span className="badge badge-ghost badge-sm">拼音で一致</span>
                         )}
                       </div>
 

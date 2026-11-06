@@ -129,6 +129,7 @@ export default function SearchBox<T extends SearchableBook & { available?: boole
                     <span className="shrink-0 font-mono text-xs text-base-content/50">{s.book.id}</span>
                   )}
                   {s.viaVariant && <span className="badge badge-ghost badge-xs shrink-0">異体字で一致</span>}
+                  {s.viaPinyin && <span className="badge badge-ghost badge-xs shrink-0">拼音で一致</span>}
                   {s.type === "title" && s.book.available && (
                     <span className="badge badge-success badge-xs shrink-0">閲覧可能</span>
                   )}

@@ -28,6 +28,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "daisyui": "^5.0.43",
+    "pinyin-pro": "3.29.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "zod": "4.1.12"

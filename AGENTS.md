@@ -14,7 +14,8 @@
 - `scripts/build-data.ts`：校验数据并生成 `src/generated/books.json`（不入库）；`dev`、`build`、`test`、`typecheck` 脚本会先自动运行它，单独运行用 `bun run data`。开发服务器运行中修改数据后需重新运行 `bun run data`。schema 错误会使构建失败；卷册页码缺口、非 1 页的重叠等仅输出警告。
 - `src/lib/books.ts`：书目数据的唯一读取入口（`library`、`getBook`、`availableBooks`、`bookSummaries`），页面和路由不要直接 import 生成的 `books.json`。
 - `data/variants/variants.tsv`：异体字对照表（`standard<TAB>variants<TAB>source<TAB>note`，每项一个字，一行一个等价组），由 `build-data` 校验并生成 `src/generated/variants.json`。当前为示例表，待替换为正式表。
-- `src/lib/search/`：检索用规范化（异体字归并、去空白与异体字选择符、兼容汉字与全角归一）、检索与候补。只用于匹配，不改变显示文字。`/books` 在浏览器端检索，筛选与检索词保存在 URL 参数中。
+- `src/lib/search/`：检索用规范化（异体字归并、去空白与异体字选择符、兼容汉字与全角归一）、拼音匹配、检索与候补。只用于匹配，不改变显示文字。`/books` 在浏览器端检索，筛选与检索词保存在 URL 参数中。
+- 拼音：`scripts/pinyin.ts` 在构建时用 `pinyin-pro`（仅开发依赖，不进入前端）为书名、著者、卷册标题、分类、朝代生成 `src/generated/pinyin.json`。先经异体字归并再取读音，多音字保留全部读音；`/books` 在首次输入拉丁字母时才加载该文件。缺读音的字在构建警告中列出。
 - `src/types/index.ts`：书目、卷册和 IIIF 类型；`@/*` 别名对应 `src/*`。
 - `src/components/`：书目筛选、排序、导航等共用组件。
 - `src/app/viewer/`：Tify 集成；日文翻译在 `public/i18n/tify/ja.json`。
