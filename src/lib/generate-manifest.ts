@@ -1,9 +1,63 @@
-import { BookEntry, BookVolume, IIIFAnnotation, IIIFAnnotationPage, IIIFCanvas, IIIFManifest, LibraryData } from "@/types";
+import { BookEntry, BookVolume, IIIFAnnotation, IIIFAnnotationPage, IIIFCanvas, IIIFManifest, IIIFRange, LibraryData } from "@/types";
 
 const url = process.env.NEXT_PUBLIC_VERCEL_URL || 'localhost:3000'
 
 const BASE_URL: string = `https://${url}`;
 const IMAGE_SERVICE_BASE_URL: string = "https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif";
+
+/**
+ * Volumes in reading order (by `sequence`, falling back to data order).
+ */
+export function sortVolumes(volumes: BookVolume[]): BookVolume[] {
+  return volumes
+    .map((volume, index) => ({ volume, index }))
+    .sort(
+      (a, b) =>
+        (a.volume.sequence ?? a.index) - (b.volume.sequence ?? b.index) ||
+        a.index - b.index
+    )
+    .map(({ volume }) => volume);
+}
+
+/**
+ * Inclusive range of book-wide image numbers covered by a volume.
+ *
+ * Images are numbered continuously across the whole book, and `startPage`
+ * is the authoritative first image of each volume. Adjacent volumes may share
+ * one image when a 卷 boundary falls inside a scanned spread.
+ * Returns null when the volume has no usable page count.
+ */
+export function volumePageRange(volume: BookVolume): [number, number] | null {
+  const start = volume.startPage ?? 1;
+  const count = volume.maxPage ?? 0;
+  if (count < 1) return null;
+  return [start, start + count - 1];
+}
+
+/**
+ * Distinct image numbers of a book in ascending order.
+ * Books without structure get a single placeholder image (1).
+ */
+export function getImageNumbers(book: BookEntry): number[] {
+  const numbers = new Set<number>();
+  for (const volume of book.structure ?? []) {
+    const range = volumePageRange(volume);
+    if (!range) continue;
+    for (let imageNo = range[0]; imageNo <= range[1]; imageNo++) {
+      numbers.add(imageNo);
+    }
+  }
+  if (numbers.size === 0) return [1];
+  return [...numbers].sort((a, b) => a - b);
+}
+
+export function imageServiceId(book: BookEntry, imageNo: number): string {
+  return `${IMAGE_SERVICE_BASE_URL}/${book.id}%2F${book.id}${String(imageNo).padStart(4, "0")}`;
+}
+
+function canvasId(book: BookEntry, imageNo: number): string {
+  return `${BASE_URL}/canvas/${book.id}/p${imageNo}`;
+}
 
 
 export class IIIFManifestGenerator {
@@ -75,31 +129,29 @@ export class IIIFManifestGenerator {
       value: { zh: [bookTypeMap[book.bookType] || book.bookType] },
     });
 
-    // Create canvases from volumes
-    const canvases: IIIFCanvas[] = [];
+    // Create one canvas per distinct image. Volumes become ranges, which may
+    // share an image when a 卷 boundary falls inside one scanned spread.
+    const volumes = sortVolumes(book.structure ?? []);
+    const imageNumbers = getImageNumbers(book);
+    const canvases: IIIFCanvas[] = imageNumbers.map((imageNo) =>
+      this.createCanvas(book, volumes, imageNo)
+    );
 
-    if (book.structure && book.structure.length > 0) {
-      for (const volume of book.structure) {
-        // Create canvases for each page in the volume
-        const maxPage = volume.maxPage || 1;
-        const startPage = volume.startPage || 1;
-
-        for (let pageNum = 1; pageNum <= maxPage; pageNum++) {
-          const globalPageNum = startPage + pageNum - 1;
-          const canvas = this.createCanvas(
-            book,
-            volume,
-            pageNum,
-            globalPageNum
-          );
-          canvases.push(canvas);
+    const structures: IIIFRange[] = volumes
+      .filter((volume) => volumePageRange(volume))
+      .map((volume) => {
+        const [first, last] = volumePageRange(volume)!;
+        const items: IIIFRange["items"] = [];
+        for (let imageNo = first; imageNo <= last; imageNo++) {
+          items.push({ id: canvasId(book, imageNo), type: "Canvas" });
         }
-      }
-    } else {
-      // If no structure, create a single canvas as placeholder
-      const canvas = this.createCanvas(book, null, 1, 1);
-      canvases.push(canvas);
-    }
+        return {
+          id: `${BASE_URL}/range/${book.id}/${volume.id}`,
+          type: "Range",
+          label: { zh: [volume.title] },
+          items,
+        };
+      });
 
     const manifest: IIIFManifest = {
       "@context": [
@@ -151,6 +203,7 @@ export class IIIFManifestGenerator {
         },
       ],
       items: canvases,
+      ...(structures.length > 0 ? { structures } : {}),
     };
 
     return manifest;
@@ -161,58 +214,54 @@ export class IIIFManifestGenerator {
    */
   private createCanvas(
     book: BookEntry,
-    volume: BookVolume | null,
-    pageNum: number,
-    globalPageNum: number
+    volumes: BookVolume[],
+    imageNo: number
   ): IIIFCanvas {
-    const canvasId = `${BASE_URL}/canvas/${book.id}/${
-      volume?.id || "p"
-    }_${pageNum}`;
+    const id = canvasId(book, imageNo);
 
     // Standard page dimensions (can be adjusted based on actual scans)
     const width = 1000;
     const height = 1400;
 
-    const pageLabel = volume
-      ? `${volume.title} - 第${pageNum}頁`
-      : `第${pageNum}頁`;
+    // A shared spread is labelled with every volume it belongs to.
+    const labels = volumes.flatMap((volume) => {
+      const range = volumePageRange(volume);
+      if (!range || imageNo < range[0] || imageNo > range[1]) return [];
+      return [`${volume.title} - 第${imageNo - range[0] + 1}頁`];
+    });
+    const pageLabel = labels.length > 0 ? labels.join("・") : `第${imageNo}頁`;
 
-    // Create image annotation
-    const imageId = `${IMAGE_SERVICE_BASE_URL}/${book.id}/${
-      volume?.id || "default"
-    }_${String(pageNum).padStart(3, "0")}.jpg`;
+    const serviceId = imageServiceId(book, imageNo);
 
     const annotation: IIIFAnnotation = {
-      id: `${canvasId}/annotation/1`,
+      id: `${id}/annotation/1`,
       type: "Annotation",
       motivation: "painting",
       body: {
-        id: imageId,
+        id: `${serviceId}/full/max/0/default.jpg`,
         type: "Image",
         format: "image/jpeg",
         height,
         width,
         service: [
           {
-            id: `${IMAGE_SERVICE_BASE_URL}/${book.id}%2F${book.id}${String(
-              pageNum
-            ).padStart(4, "0")}`,
+            id: serviceId,
             type: "ImageService3",
             profile: "http://iiif.io/api/image/3/level2.json",
           },
         ],
       },
-      target: canvasId,
+      target: id,
     };
 
     const annotationPage: IIIFAnnotationPage = {
-      id: `${canvasId}/page/1`,
+      id: `${id}/page/1`,
       type: "AnnotationPage",
       items: [annotation],
     };
 
     const canvas: IIIFCanvas = {
-      id: canvasId,
+      id,
       type: "Canvas",
       label: {
         zh: [pageLabel],

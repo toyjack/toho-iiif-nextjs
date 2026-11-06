@@ -31,6 +31,14 @@ export interface IIIFManifest {
     }>;
   }>;
   items: IIIFCanvas[];
+  structures?: IIIFRange[];
+}
+
+export interface IIIFRange {
+  id: string;
+  type: "Range";
+  label: { [lang: string]: string[] };
+  items: Array<{ id: string; type: "Canvas" }>;
 }
 
 export interface IIIFCanvas {

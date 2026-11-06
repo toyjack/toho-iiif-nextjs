@@ -1,5 +1,6 @@
 import { AvailableBook } from "@/constants/AvailableBook";
 import { tohoData } from "@/constants/TohoData";
+import { getImageNumbers } from "@/lib/generate-manifest";
 import Link from "next/link";
 
 export default function Home() {
@@ -11,16 +12,8 @@ export default function Home() {
     .filter((book) => {
       return AvailableBook.includes(book.id);
     })
-    .map((book) => {
-      return (
-        book.structure
-          ?.map((volume) => {
-            return Number(volume.maxPage);
-          })
-          .reduce((acc, cur) => acc + cur, 0) || 0
-      );
-    })
-    .reduce((acc, cur) => acc + (cur || 0), 0);
+    .filter((book) => (book.structure?.length ?? 0) > 0)
+    .reduce((acc, book) => acc + getImageNumbers(book).length, 0);
 
   // ランダムな6部書籍を取得
   const randomBooks = tohoData.books
