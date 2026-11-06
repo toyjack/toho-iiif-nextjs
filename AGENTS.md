@@ -28,10 +28,11 @@
 | `bun run build` | 生产构建 |
 | `bun run start` | 启动已构建的应用 |
 | `bun run typecheck` | 类型检查（`tsc --noEmit`），需要已安装依赖及 Next.js 生成的类型 |
+| `bun run test` | 运行 `bun test` 单元测试（`src/**/*.test.ts`） |
 
 - 需要执行安装脚本的依赖须列入 `package.json` 的 `trustedDependencies`；Bun 默认不运行依赖的生命周期脚本。
-- 当前没有自动化测试脚本或测试框架。`bun run lint` 虽已定义为 `next lint`，但仓库未配置 ESLint 依赖或配置文件；不要把它当作已可用的检查。
-- 修改应用代码后执行相关类型检查和生产构建；说明遇到的既有错误、缺失依赖或环境限制。仅修改文档时检查差异与引用即可。
+- 单元测试覆盖 manifest 页号映射与基址处理；修改 `src/lib` 时补充或更新相应测试。`bun run lint` 虽已定义为 `next lint`，但仓库未配置 ESLint 依赖或配置文件；不要把它当作已可用的检查。
+- 修改应用代码后执行测试、类型检查和生产构建；说明遇到的既有错误、缺失依赖或环境限制。仅修改文档时检查差异与引用即可。
 - 书目或 IIIF 相关修改需验证：书目列表、已知 ID 的 manifest、未知 ID 的 404，以及阅读器加载与翻页；多卷逻辑变更还需检查卷册边界。
 - UI 修改检查桌面和窄屏效果，并保留日文界面与现有主题。
 - `next.config.ts` 使用 `output: "standalone"`；Dockerfile 基于固定版本的 `oven/bun` Alpine 镜像，以 `bun server.js` 运行独立输出；升级 Bun 时同步修改 `packageManager`、`engines` 与 Dockerfile 的镜像标签。
@@ -44,8 +45,8 @@
 - 保留书目原文、旧字形、ID、卷册结构和外部链接。数据修订应有来源依据，避免推测性改写或批量规范化。
 - 修改 IIIF 时核对资源 ID、语言映射、`right-to-left`、归属与权利声明、图像服务 URL 编码、页数及卷册顺序；本地接口类型不能替代实际阅读器验证。
 - 外部图像服务为 `https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif`，实际图像加载依赖该服务。
-- 当前基址构造为 `https://${NEXT_PUBLIC_VERCEL_URL || 'localhost:3000'}`，环境变量按 host 而非完整 URL 使用；本地回退也会生成 HTTPS 地址，调试时需留意。
-- 当前生成器计算并传入 `globalPageNum`，但未使用它构造图像服务地址，页号按卷重新计数。涉及分页的任务应核对数据和实际图像，不要假定跨卷连续编号已正确实现。
+- manifest、canvas、range 的 ID 基址在请求时由 `src/lib/site-url.ts` 决定：优先使用运行时环境变量 `SITE_URL`（完整 origin 或裸 host），未设置时使用请求的 `X-Forwarded-Host`/`Host` 与 `X-Forwarded-Proto`。生产部署应设置 `SITE_URL`；加入共享缓存前必须设置，避免伪造请求头污染缓存。
+- 图像按全书连续编号：卷的图像范围为 `[startPage, startPage + maxPage - 1]`，以 `startPage` 为准。按「卷」划分的书在卷界处可能共用一张对开页；manifest 中每张图像只生成一个 canvas，卷册以 `structures`（Range）表达且允许重叠。修改分页逻辑或卷册数据时需对照实际图像核对。
 
 ## Claude Code 与 Codex 协作
 

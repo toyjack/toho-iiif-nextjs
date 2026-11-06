@@ -1,8 +1,5 @@
 import { BookEntry, BookVolume, IIIFAnnotation, IIIFAnnotationPage, IIIFCanvas, IIIFManifest, IIIFRange, LibraryData } from "@/types";
 
-const url = process.env.NEXT_PUBLIC_VERCEL_URL || 'localhost:3000'
-
-const BASE_URL: string = `https://${url}`;
 const IMAGE_SERVICE_BASE_URL: string = "https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif";
 
 /**
@@ -55,22 +52,29 @@ export function imageServiceId(book: BookEntry, imageNo: number): string {
   return `${IMAGE_SERVICE_BASE_URL}/${book.id}%2F${book.id}${String(imageNo).padStart(4, "0")}`;
 }
 
-function canvasId(book: BookEntry, imageNo: number): string {
-  return `${BASE_URL}/canvas/${book.id}/p${imageNo}`;
+function canvasId(baseUrl: string, book: BookEntry, imageNo: number): string {
+  return `${baseUrl}/canvas/${book.id}/p${imageNo}`;
 }
 
 
 export class IIIFManifestGenerator {
   private tohoData: LibraryData;
-  constructor(tohoData: LibraryData) {
+  private baseUrl: string;
+
+  /**
+   * @param baseUrl Public origin of this site, e.g. "https://example.org".
+   *   Used for manifest, canvas and range IDs; a trailing slash is ignored.
+   */
+  constructor(tohoData: LibraryData, baseUrl: string) {
     this.tohoData = tohoData;
+    this.baseUrl = baseUrl.replace(/\/+$/, "");
   }
 
   /**
    * Generate a IIIF manifest for a single book
    */
   generateManifest(book: BookEntry): IIIFManifest {
-    const manifestId = `${BASE_URL}/manifest/${book.id}/manifest.json`;
+    const manifestId = `${this.baseUrl}/manifest/${book.id}/manifest.json`;
 
     // Create metadata entries
     const metadata = [
@@ -143,10 +147,10 @@ export class IIIFManifestGenerator {
         const [first, last] = volumePageRange(volume)!;
         const items: IIIFRange["items"] = [];
         for (let imageNo = first; imageNo <= last; imageNo++) {
-          items.push({ id: canvasId(book, imageNo), type: "Canvas" });
+          items.push({ id: canvasId(this.baseUrl, book, imageNo), type: "Canvas" });
         }
         return {
-          id: `${BASE_URL}/range/${book.id}/${volume.id}`,
+          id: `${this.baseUrl}/range/${book.id}/${volume.id}`,
           type: "Range",
           label: { zh: [volume.title] },
           items,
@@ -181,7 +185,7 @@ export class IIIFManifestGenerator {
       rights: "http://creativecommons.org/licenses/by/4.0/",
       provider: [
         {
-          id: BASE_URL,
+          id: this.baseUrl,
           type: "Agent",
           label: {
             ja: ["東方学IIIF図書館"],
@@ -190,7 +194,7 @@ export class IIIFManifestGenerator {
           },
           homepage: [
             {
-              id: BASE_URL,
+              id: this.baseUrl,
               type: "Text",
               label: {
                 ja: ["東方学IIIF図書館"],
@@ -217,7 +221,7 @@ export class IIIFManifestGenerator {
     volumes: BookVolume[],
     imageNo: number
   ): IIIFCanvas {
-    const id = canvasId(book, imageNo);
+    const id = canvasId(this.baseUrl, book, imageNo);
 
     // Standard page dimensions (can be adjusted based on actual scans)
     const width = 1000;

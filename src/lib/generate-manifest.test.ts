@@ -47,7 +47,7 @@ function serviceNumbers(manifest: IIIFManifest): number[] {
   );
 }
 
-const generator = new IIIFManifestGenerator(tohoData);
+const generator = new IIIFManifestGenerator(tohoData, "https://example.test");
 
 describe("page mapping", () => {
   test("uses book-wide image numbers from startPage", () => {

@@ -43,6 +43,9 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+# Public origin used in IIIF manifest IDs, read at runtime. Set it when
+# running the container, e.g. `docker run -e SITE_URL=https://example.org`.
+# If unset, the request's Host / X-Forwarded-* headers are used.
 
 # server.js is created by next build from the standalone output
 CMD ["bun", "server.js"]

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {tohoData} from "@/constants/TohoData"
+import { getSiteUrl } from "@/lib/site-url";
 import { IIIFManifestGenerator } from "@/lib/generate-manifest";
 export async function GET(
   request: Request,
@@ -7,7 +8,7 @@ export async function GET(
 ) {
   const { manifestId } = await params;
 
-  const manifestGenerator = new IIIFManifestGenerator(tohoData);
+  const manifestGenerator = new IIIFManifestGenerator(tohoData, getSiteUrl(request));
 
   const manifest = manifestGenerator.getManifest(manifestId);
   if (!manifest) {
