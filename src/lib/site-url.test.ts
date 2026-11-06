@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { tohoData } from "@/constants/TohoData";
+import { library } from "@/lib/books";
 import { IIIFManifestGenerator } from "./generate-manifest";
 import { getSiteUrl } from "./site-url";
 
@@ -43,7 +43,7 @@ describe("getSiteUrl", () => {
 });
 
 test("manifest IDs use the given base URL", () => {
-  const manifest = new IIIFManifestGenerator(tohoData, "https://toho.example.org/").getManifest("A029")!;
+  const manifest = new IIIFManifestGenerator(library, "https://toho.example.org/").getManifest("A029")!;
   expect(manifest.id).toBe("https://toho.example.org/manifest/A029/manifest.json");
   expect(manifest.items[0].id).toBe("https://toho.example.org/canvas/A029/p1");
   expect(manifest.provider[0].id).toBe("https://toho.example.org");

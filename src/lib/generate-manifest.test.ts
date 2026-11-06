@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { tohoData } from "@/constants/TohoData";
-import { AvailableBook } from "@/constants/AvailableBook";
+import { library } from "@/lib/books";
 import { BookEntry, BookVolume, IIIFManifest } from "@/types";
 import {
   getImageNumbers,
@@ -37,6 +36,7 @@ function book(structure: BookVolume[]): BookEntry {
     isIncomplete: false,
     hasSeals: false,
     hasNotes: false,
+    available: true,
     structure,
   };
 }
@@ -47,7 +47,7 @@ function serviceNumbers(manifest: IIIFManifest): number[] {
   );
 }
 
-const generator = new IIIFManifestGenerator(tohoData, "https://example.test");
+const generator = new IIIFManifestGenerator(library, "https://example.test");
 
 describe("page mapping", () => {
   test("uses book-wide image numbers from startPage", () => {
@@ -94,7 +94,7 @@ describe("real data", () => {
   });
 
   test("A046 ends at image 139 (checked against the image server)", () => {
-    const a046 = tohoData.books.find((b) => b.id === "A046")!;
+    const a046 = library.books.find((b) => b.id === "A046")!;
     expect(getImageNumbers(a046).at(-1)).toBe(139);
   });
 
@@ -105,8 +105,8 @@ describe("real data", () => {
   });
 
   test("every volume of an available book has a page count", () => {
-    const missing = tohoData.books
-      .filter((b) => AvailableBook.includes(b.id))
+    const missing = library.books
+      .filter((b) => b.available)
       .flatMap((b) => b.structure ?? [])
       .filter((v) => !v.maxPage)
       .map((v) => v.id);

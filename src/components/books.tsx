@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { LibraryData } from "@/types";
-import { NuNumber } from "@/constants/NuNumber";
 
 type SortOption = "title" | "category" | "dynasty" | "bookType";
 type FilterState = {
@@ -20,10 +19,8 @@ type FilterState = {
 
 export default function BooksComp({
   tohoData,
-  AvailableBook,
 }: {
   tohoData: LibraryData;
-  AvailableBook: string[];
 }) {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") || "";
@@ -95,7 +92,7 @@ export default function BooksComp({
         return false;
 
       // 仅显示可浏览的书籍
-      if (filters.onlyAvailable && !AvailableBook.includes(book.id))
+      if (filters.onlyAvailable && !book.available)
         return false;
 
       return true;
@@ -396,8 +393,8 @@ export default function BooksComp({
           {/* 书籍网格 */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
             {filteredAndSortedBooks.map((book) => {
-              const isAvailable = AvailableBook.includes(book.id);
-              const hasNuNumber = Object.keys(NuNumber).includes(book.id);
+              const isAvailable = book.available;
+              const nuNumber = book.nuNumber;
               return (
                 <div
                   key={book.id}
@@ -481,9 +478,9 @@ export default function BooksComp({
                         Manifest
                       </Link> */}
 
-                      {hasNuNumber && (
+                      {nuNumber && (
                         <Link
-                          href={`http://kanji.zinbun.kyoto-u.ac.jp/kanseki?record=data/FA019705/tagged/${NuNumber[book.id as keyof typeof NuNumber]}.dat&back=1`}
+                          href={`http://kanji.zinbun.kyoto-u.ac.jp/kanseki?record=data/FA019705/tagged/${nuNumber}.dat&back=1`}
                           className="btn btn-ghost btn-info btn-sm"
                           target="_blank"
                           rel="noopener noreferrer"

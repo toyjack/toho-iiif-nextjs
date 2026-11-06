@@ -10,8 +10,9 @@
 - `src/app/`：页面与 Route Handlers。主要路径为 `/`、`/books`、`/viewer?book=<id>&page=<n>`、`/about`、`/sitepolicy`。
 - `src/app/manifest/[manifestId]/manifest.json/route.ts`：`GET /manifest/<id>/manifest.json`，查找书目并返回 JSON；未知 ID 返回 404，成功响应带 CORS 头。
 - `src/lib/generate-manifest.ts`：`IIIFManifestGenerator`，负责 manifest、canvas 与图像 annotation 的生成。
-- `src/constants/TohoData.ts`：大型静态书目数据，按需读取相关记录，避免无关的整文件格式化。
-- `src/constants/AvailableBook.ts`：有图像的书目 ID 列表；`src/constants/NuNumber.ts`：外部馆藏目录编号映射，由 `src/components/books.tsx` 使用。
+- `data/books/<id>.md`：每部书一个文件。YAML frontmatter 存书目字段（含 `available` 是否可阅读、`nuNumber` 全国漢籍DB 编号、`structure` 卷册），正文可写解题与修订依据。`data/site.yaml` 存站点标题和分类显示顺序；`data/legacy/orphan-ids.yaml` 保存迁移时找不到对应书目的旧 ID，应用不读取。
+- `scripts/build-data.ts`：校验数据并生成 `src/generated/books.json`（不入库）；`dev`、`build`、`test`、`typecheck` 脚本会先自动运行它，单独运行用 `bun run data`。开发服务器运行中修改数据后需重新运行 `bun run data`。schema 错误会使构建失败；卷册页码缺口、非 1 页的重叠等仅输出警告。
+- `src/lib/books.ts`：书目数据的唯一读取入口（`library`、`getBook`、`availableBooks`），页面和路由不要直接 import 生成的 JSON。
 - `src/types/index.ts`：书目、卷册和 IIIF 类型；`@/*` 别名对应 `src/*`。
 - `src/components/`：书目筛选、排序、导航等共用组件。
 - `src/app/viewer/`：Tify 集成；日文翻译在 `public/i18n/tify/ja.json`。

@@ -1,23 +1,22 @@
-import { AvailableBook } from "@/constants/AvailableBook";
-import { tohoData } from "@/constants/TohoData";
+import { library } from "@/lib/books";
 import { getImageNumbers } from "@/lib/generate-manifest";
 import Link from "next/link";
 
 export default function Home() {
   // 古書統計情報を取得
-  const totalBooks = tohoData.metadata.totalBooks;
-  const totalVolumes = tohoData.metadata.totalVolumes;
-  const categories = tohoData.metadata.categories;
-  const availableImagesCount = tohoData.books
+  const totalBooks = library.metadata.totalBooks;
+  const totalVolumes = library.metadata.totalVolumes;
+  const categories = library.metadata.categories;
+  const availableImagesCount = library.books
     .filter((book) => {
-      return AvailableBook.includes(book.id);
+      return book.available;
     })
     .filter((book) => (book.structure?.length ?? 0) > 0)
     .reduce((acc, book) => acc + getImageNumbers(book).length, 0);
 
   // ランダムな6部書籍を取得
-  const randomBooks = tohoData.books
-    .filter((book) => AvailableBook.includes(book.id))
+  const randomBooks = library.books
+    .filter((book) => book.available)
     .sort(() => Math.random() - 0.5)
     .slice(0, 6);
 
@@ -156,7 +155,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {categories.slice(0, 5).map((category, index) => {
-              const bookCount = tohoData.books.filter(
+              const bookCount = library.books.filter(
                 (book) => book.category === category
               ).length;
               const icons = [
@@ -211,7 +210,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {categories.slice(5, 10).map((category, index) => {
-              const bookCount = tohoData.books.filter(
+              const bookCount = library.books.filter(
                 (book) => book.category === category
               ).length;
               const icons = [

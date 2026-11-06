@@ -1,13 +1,12 @@
 import BooksComp from '@/components/books'
 import  { Suspense } from 'react'
-import { tohoData } from "@/constants/TohoData";
-import { AvailableBook } from "@/constants/AvailableBook";
+import { library } from "@/lib/books";
 
 
 function BooksPage() {
   return (
     <Suspense>
-      <BooksComp tohoData={tohoData} AvailableBook={AvailableBook}/>
+      <BooksComp tohoData={library}/>
     </Suspense>
   )
 }

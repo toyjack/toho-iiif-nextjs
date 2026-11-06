@@ -102,6 +102,12 @@ export interface BookEntry {
   isIncomplete: boolean;
   hasSeals: boolean;
   hasNotes: boolean;
+  /** Images can be viewed (formerly AvailableBook.ts). */
+  available: boolean;
+  /** Record number in 全国漢籍データベース (formerly NuNumber.ts). */
+  nuNumber?: string;
+  /** Markdown body of data/books/<id>.md (解題, notes), when present. */
+  notes?: string;
   structure?: BookVolume[];
   totalVolumes?: number;
 }
