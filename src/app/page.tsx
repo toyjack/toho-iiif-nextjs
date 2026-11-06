@@ -1,8 +1,14 @@
-import { library } from "@/lib/books";
+import { connection } from "next/server";
+import { availableBooks, library } from "@/lib/books";
 import { getImageNumbers } from "@/lib/generate-manifest";
+import { sample } from "@/lib/random";
 import Link from "next/link";
 
-export default function Home() {
+export default async function Home() {
+  // Render per request so the featured books change on every visit
+  // (a static page would fix them at build time).
+  await connection();
+
   // 古書統計情報を取得
   const totalBooks = library.metadata.totalBooks;
   const totalVolumes = library.metadata.totalVolumes;
@@ -15,10 +21,7 @@ export default function Home() {
     .reduce((acc, book) => acc + getImageNumbers(book).length, 0);
 
   // ランダムな6部書籍を取得
-  const randomBooks = library.books
-    .filter((book) => book.available)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 6);
+  const randomBooks = sample(availableBooks(), 6);
 
   return (
     <>

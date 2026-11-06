@@ -1,32 +1,46 @@
 import { NextResponse } from "next/server";
-import { library } from "@/lib/books";
 import { getSiteUrl } from "@/lib/site-url";
-import { IIIFManifestGenerator } from "@/lib/generate-manifest";
+import {
+  CORS_HEADERS,
+  MANIFEST_CONTENT_TYPE,
+  acceptsGzip,
+  cacheControl,
+  manifestBody,
+} from "@/lib/manifest-response";
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ manifestId: string }> }
 ) {
   const { manifestId } = await params;
+  const body = manifestBody(manifestId, getSiteUrl(request));
 
-  const manifestGenerator = new IIIFManifestGenerator(library, getSiteUrl(request));
-
-  const manifest = manifestGenerator.getManifest(manifestId);
-  if (!manifest) {
-    return new NextResponse(
-      JSON.stringify({ error: "Manifest not found" }),
-      { status: 404, headers: { "Content-Type": "application/json" } }
+  if (body === null) {
+    return NextResponse.json(
+      { error: "Manifest not found" },
+      { status: 404, headers: { ...CORS_HEADERS, "Cache-Control": "no-store" } }
     );
   }
 
+  const headers: Record<string, string> = {
+    ...CORS_HEADERS,
+    "Content-Type": MANIFEST_CONTENT_TYPE,
+    "Cache-Control": cacheControl(Boolean(process.env.SITE_URL?.trim())),
+    Vary: "Accept-Encoding",
+  };
 
-  return new NextResponse(JSON.stringify(manifest, null, 2), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
+  // Next does not compress route-handler responses here, and manifests of
+  // large books are MBs of repetitive JSON, so serve a memoised gzip.
+  if (acceptsGzip(request.headers.get("accept-encoding"))) {
+    return new NextResponse(body.gzip() as BodyInit, {
+      status: 200,
+      headers: { ...headers, "Content-Encoding": "gzip" },
+    });
+  }
+  return new NextResponse(body.json, { status: 200, headers });
+}
 
+/** CORS preflight. */
+export function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
