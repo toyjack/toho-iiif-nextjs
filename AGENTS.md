@@ -42,10 +42,13 @@
 | `bun run start` | 启动已构建的应用 |
 | `bun run typecheck` | 类型检查（`tsc --noEmit`），需要已安装依赖及 Next.js 生成的类型 |
 | `bun run test` | 运行 `bun test` 单元测试（`src/**/*.test.ts`） |
+| `bun run lint` | ESLint（`next lint`，`eslint.config.mjs`，检查 `src` 与 `scripts`）；`bun run build` 也会执行 lint |
 
 - 需要执行安装脚本的依赖须列入 `package.json` 的 `trustedDependencies`；Bun 默认不运行依赖的生命周期脚本。
-- 单元测试覆盖 manifest 页号映射与基址处理；修改 `src/lib` 时补充或更新相应测试。`bun run lint` 虽已定义为 `next lint`，但仓库未配置 ESLint 依赖或配置文件；不要把它当作已可用的检查。
-- 修改应用代码后执行测试、类型检查和生产构建；说明遇到的既有错误、缺失依赖或环境限制。仅修改文档时检查差异与引用即可。
+- 单元测试覆盖 manifest 页号映射与基址处理；修改 `src/lib` 时补充或更新相应测试。
+- 修改应用代码后执行测试、lint、类型检查和生产构建；说明遇到的既有错误、缺失依赖或环境限制。
+- `bookType` 的显示名统一使用 `src/lib/book-type.ts`。客户端组件不要 import `@/lib/books`，否则整份书目会进入浏览器 bundle。
+- `/api/health` 供 Dockerfile 的 `HEALTHCHECK` 使用。仅修改文档时检查差异与引用即可。
 - 书目或 IIIF 相关修改需验证：书目列表、已知 ID 的 manifest、未知 ID 的 404，以及阅读器加载与翻页；多卷逻辑变更还需检查卷册边界。
 - UI 修改检查桌面和窄屏效果，并保留日文界面与现有主题。
 - `next.config.ts` 使用 `output: "standalone"`；Dockerfile 基于固定版本的 `oven/bun` Alpine 镜像，以 `bun server.js` 运行独立输出；升级 Bun 时同步修改 `packageManager`、`engines` 与 Dockerfile 的镜像标签。

@@ -1,6 +1,10 @@
+import { bookTypeLabel } from "@/lib/book-type";
 import { BookEntry, BookVolume, IIIFAnnotation, IIIFAnnotationPage, IIIFCanvas, IIIFManifest, IIIFRange, LibraryData } from "@/types";
 
 const IMAGE_SERVICE_BASE_URL: string = "https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif";
+
+/** Site name in traditional (zh) and Japanese shinjitai (ja) forms. */
+const SITE_NAME = { zh: ["東方學IIIF圖書館"], ja: ["東方学IIIF図書館"] };
 
 /**
  * Volumes in reading order (by `sequence`, falling back to data order).
@@ -132,17 +136,9 @@ export class IIIFManifestGenerator {
       });
     }
 
-    // Add book type
-    const bookTypeMap: { [key: string]: string } = {
-      manuscript: "手鈔本",
-      printed: "刊本",
-      rubbing: "拓本",
-      unknown: "未知",
-    };
-
     metadata.push({
       label: { en: ["Book Type"], zh: ["版本類型"] },
-      value: { zh: [bookTypeMap[book.bookType] || book.bookType] },
+      value: { zh: [bookTypeLabel(book.bookType)] },
     });
 
     // Create one canvas per distinct image. Volumes become ranges, which may
@@ -176,43 +172,25 @@ export class IIIFManifestGenerator {
       ],
       id: manifestId,
       type: "Manifest",
-      label: {
-        zh: [book.title],
-        // en: [book.title],
-      },
+      label: { zh: [book.title] },
       metadata,
-      summary: {
-        zh: [book.publicationInfo || ""],
-        // en: [book.publicationInfo || ""],
-      },
+      ...(book.publicationInfo ? { summary: { zh: [book.publicationInfo] } } : {}),
       viewingDirection: "right-to-left",
       requiredStatement: {
         label: { en: ["Attribution"], zh: ["歸屬"] },
-        value: {
-          zh: ["東方學IIIF圖書館"],
-          ja: ["東方学IIIF図書館"],
-          // en: ["Oriental Studies Digital Library"],
-        },
+        value: SITE_NAME,
       },
       rights: "http://creativecommons.org/licenses/by/4.0/",
       provider: [
         {
           id: this.baseUrl,
           type: "Agent",
-          label: {
-            ja: ["東方学IIIF図書館"],
-            zh: ["東方学IIIF図書館"],
-            // "en": ["Oriental Studies Digital Library"]
-          },
+          label: SITE_NAME,
           homepage: [
             {
               id: this.baseUrl,
               type: "Text",
-              label: {
-                ja: ["東方学IIIF図書館"],
-                zh: ["東方学IIIF図書館"],
-                // "en": ["Oriental Studies Digital Library"]
-              },
+              label: SITE_NAME,
               format: "text/html",
             },
           ],

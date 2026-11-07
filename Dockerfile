@@ -47,5 +47,8 @@ ENV HOSTNAME="0.0.0.0"
 # running the container, e.g. `docker run -e SITE_URL=https://example.org`.
 # If unset, the request's Host / X-Forwarded-* headers are used.
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- "http://127.0.0.1:${PORT}/api/health" > /dev/null || exit 1
+
 # server.js is created by next build from the standalone output
 CMD ["bun", "server.js"]

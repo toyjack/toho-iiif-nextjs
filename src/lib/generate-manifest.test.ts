@@ -85,6 +85,25 @@ describe("page mapping", () => {
   });
 });
 
+describe("descriptive properties", () => {
+  test("site name uses traditional forms for zh and shinjitai for ja", () => {
+    const manifest = generator.generateManifest(book([]));
+    expect(manifest.provider![0].label).toEqual({ zh: ["東方學IIIF圖書館"], ja: ["東方学IIIF図書館"] });
+    expect(manifest.requiredStatement!.value).toEqual(manifest.provider![0].label);
+  });
+
+  test("summary is omitted when there is no publication info", () => {
+    expect(generator.generateManifest(book([])).summary).toBeUndefined();
+    const withInfo = { ...book([]), publicationInfo: "乾隆刊本" };
+    expect(generator.generateManifest(withInfo).summary).toEqual({ zh: ["乾隆刊本"] });
+  });
+
+  test("book type is labelled", () => {
+    const value = generator.generateManifest(book([])).metadata!.find((m) => m.label.en?.[0] === "Book Type")!.value;
+    expect(value).toEqual({ zh: ["刊本"] });
+  });
+});
+
 describe("canvas size", () => {
   test("canvas and image use the book's imageSize", () => {
     const b = { ...book([volume(1, 1, 2)]), imageSize: { width: 4000, height: 3415 } };

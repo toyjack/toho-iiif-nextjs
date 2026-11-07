@@ -1,4 +1,5 @@
 import { connection } from "next/server";
+import { bookTypeLabel } from "@/lib/book-type";
 import { availableBooks, library } from "@/lib/books";
 import { getImageNumbers } from "@/lib/generate-manifest";
 import { sample } from "@/lib/random";
@@ -303,13 +304,10 @@ export default async function Home() {
                   </div>
                   <div className="card-actions justify-between items-center mt-4">
                     <div className="flex gap-1">
-                      {book.bookType === "manuscript" && (
+                      {book.bookType !== "unknown" && (
                         <div className="badge badge-outline badge-xs">
-                          手写本
+                          {bookTypeLabel(book.bookType)}
                         </div>
-                      )}
-                      {book.bookType === "printed" && (
-                        <div className="badge badge-outline badge-xs">刊本</div>
                       )}
                       {book.hasSeals && (
                         <div className="badge badge-outline badge-xs">印有</div>

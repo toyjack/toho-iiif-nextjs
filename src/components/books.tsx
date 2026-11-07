@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { bookTypeLabel } from "@/lib/book-type";
 import type { BookSummary } from "@/lib/books";
 import { buildIndex, search, suggest, type Suggestion } from "@/lib/search/search";
 import { isPinyinQuery, type PinyinDict } from "@/lib/search/pinyin";
@@ -22,13 +23,6 @@ const PARAM = {
   order: "order",
 } as const;
 
-const BOOK_TYPE_LABELS: Record<string, string> = {
-  manuscript: "手鈔本",
-  printed: "刊本",
-  rubbing: "拓本",
-  unknown: "未知",
-};
-const getBookTypeLabel = (type: string) => BOOK_TYPE_LABELS[type] || type;
 
 export default function BooksComp({
   books,
@@ -248,7 +242,7 @@ export default function BooksComp({
                   <option value="">全部類型</option>
                   {filterOptions.bookTypes.map((type) => (
                     <option key={type} value={type}>
-                      {getBookTypeLabel(type)}
+                      {bookTypeLabel(type)}
                     </option>
                   ))}
                 </select>
@@ -368,7 +362,7 @@ export default function BooksComp({
                           </span>
                         )}
                         <span className="badge badge-outline badge-sm">
-                          {getBookTypeLabel(book.bookType)}
+                          {bookTypeLabel(book.bookType)}
                         </span>
                         {query && viaVariant && (
                           <span className="badge badge-ghost badge-sm">異体字で一致</span>
