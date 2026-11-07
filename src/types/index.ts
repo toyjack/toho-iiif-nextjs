@@ -106,6 +106,17 @@ export interface BookEntry {
   available: boolean;
   /** Record number in 全国漢籍データベース (formerly NuNumber.ts). */
   nuNumber?: string;
+  /**
+   * Pixel size of the book's scans, from the image server's info.json.
+   * Most images of a book share it (within a pixel or two); exceptions are
+   * listed in `imageSizes`.
+   */
+  imageSize?: { width: number; height: number };
+  /**
+   * Images whose size differs from `imageSize` (e.g. covers), keyed by
+   * book-wide image number (from data/image-sizes/<id>.tsv).
+   */
+  imageSizes?: Record<number, { width: number; height: number }>;
   /** Markdown body of data/books/<id>.md (解題, notes), when present. */
   notes?: string;
   structure?: BookVolume[];

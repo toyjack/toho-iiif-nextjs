@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { library } from "@/lib/books";
 import { BookEntry, BookVolume, IIIFManifest } from "@/types";
 import {
+  DEFAULT_IMAGE_SIZE,
   getImageNumbers,
   IIIFManifestGenerator,
   sortVolumes,
@@ -81,6 +82,34 @@ describe("page mapping", () => {
 
   test("book without structure gets a single placeholder canvas", () => {
     expect(generator.generateManifest(book([])).items).toHaveLength(1);
+  });
+});
+
+describe("canvas size", () => {
+  test("canvas and image use the book's imageSize", () => {
+    const b = { ...book([volume(1, 1, 2)]), imageSize: { width: 4000, height: 3415 } };
+    const canvas = generator.generateManifest(b).items[0];
+    expect([canvas.width, canvas.height]).toEqual([4000, 3415]);
+    const body = canvas.items[0].items[0].body;
+    expect([body.width, body.height]).toEqual([4000, 3415]);
+  });
+
+  test("per-image exceptions override imageSize", () => {
+    const b = {
+      ...book([volume(1, 1, 3)]),
+      imageSize: { width: 5800, height: 2570 },
+      imageSizes: { 1: { width: 5800, height: 3185 } },
+    };
+    const sizes = generator.generateManifest(b).items.map((c) => [c.width, c.height]);
+    expect(sizes).toEqual([[5800, 3185], [5800, 2570], [5800, 2570]]);
+  });
+
+  test("falls back to a landscape default without imageSize", () => {
+    const canvas = generator.generateManifest(book([volume(1, 1, 1)])).items[0];
+    expect([canvas.width, canvas.height]).toEqual([
+      DEFAULT_IMAGE_SIZE.width,
+      DEFAULT_IMAGE_SIZE.height,
+    ]);
   });
 });
 

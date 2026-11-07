@@ -11,7 +11,15 @@
 - `src/app/manifest/[manifestId]/manifest.json/route.ts`：`GET /manifest/<id>/manifest.json`，返回 `application/ld+json`（IIIF 3.0 profile）的紧凑 JSON；未知 ID 返回 404。成功与 404 响应都带 CORS 头，并支持 `OPTIONS` 预检。响应逻辑在 `src/lib/manifest-response.ts`：按书与基址在内存中缓存序列化结果及其 gzip（Next 不压缩此路由的响应，由路由按 `Accept-Encoding` 自行返回 gzip）；设置了 `SITE_URL` 时 `Cache-Control` 为 public，否则为 private。
 - 首页（`/`）按请求渲染，每次访问随机展示 6 部可阅读的书（`src/lib/random.ts`）。
 - `src/lib/generate-manifest.ts`：`IIIFManifestGenerator`，负责 manifest、canvas 与图像 annotation 的生成。
-- `data/books/<id>.md`：每部书一个文件。YAML frontmatter 存书目字段（含 `available` 是否可阅读、`nuNumber` 全国漢籍DB 编号、`structure` 卷册），正文可写解题与修订依据。`data/site.yaml` 存站点标题和分类显示顺序；`data/legacy/orphan-ids.yaml` 保存迁移时找不到对应书目的旧 ID，应用不读取。
+- `data/books/<id>.md`：每部书一个文件。YAML frontmatter 存书目字段（含 `available` 是否可阅读、`nuNumber` 全国漢籍DB 编号、`imageSize` 扫描图像像素尺寸、`structure` 卷册），正文可写解题与修订依据。
+- 图像尺寸来自图像服务的 `info.json`，用作 manifest 中 canvas 与图像的宽高：
+  - `imageSize`（frontmatter）是该书多数图像的尺寸。大多数书全书一致（相差一两个像素）。
+  - 封面、旋转图像等相差超过 1% 的图像，列在 `data/image-sizes/<id>.tsv`（`image<TAB>width<TAB>height`，有表头），由 `build-data` 校验。目前有 34 部书有这类例外。
+  - 缺少 `imageSize` 时使用 `DEFAULT_IMAGE_SIZE`（横向），构建时给出警告。
+- 新增或修改可阅读书目后，运行 `bun scripts/fetch-image-sizes.ts [ID ...]`：
+  - 默认抽查首、次、中、末 4 张图像，尺寸一致才写入；不一致的列出供核对。
+  - 对列出的书加 `--full ID ...`：读取全部图像，写入多数尺寸和例外表。
+  - 请求逐个发送并间隔等待；`--cache <tsv>` 可续跑。不要并行或高频请求图像服务。`data/site.yaml` 存站点标题和分类显示顺序；`data/legacy/orphan-ids.yaml` 保存迁移时找不到对应书目的旧 ID，应用不读取。
 - `scripts/build-data.ts`：校验数据并生成 `src/generated/books.json`（不入库）；`dev`、`build`、`test`、`typecheck` 脚本会先自动运行它，单独运行用 `bun run data`。开发服务器运行中修改数据后需重新运行 `bun run data`。schema 错误会使构建失败；卷册页码缺口、非 1 页的重叠等仅输出警告。
 - `src/lib/books.ts`：书目数据的唯一读取入口（`library`、`getBook`、`availableBooks`、`bookSummaries`），页面和路由不要直接 import 生成的 `books.json`。
 - `data/variants/variants.tsv`：异体字对照表（`standard<TAB>variants<TAB>source<TAB>note`，每项一个字，一行一个等价组），由 `build-data` 校验并生成 `src/generated/variants.json`。当前为示例表，待替换为正式表。

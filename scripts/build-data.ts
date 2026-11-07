@@ -18,6 +18,7 @@ const dataDir = join(root, "data");
 const booksDir = join(dataDir, "books");
 const generatedDir = join(root, "src", "generated");
 const outFile = join(generatedDir, "books.json");
+const imageSizesDir = join(dataDir, "image-sizes");
 const variantsFile = join(dataDir, "variants", "variants.tsv");
 const variantsOut = join(generatedDir, "variants.json");
 const pinyinOut = join(generatedDir, "pinyin.json");
@@ -52,6 +53,7 @@ const bookSchema = z.strictObject({
   hasNotes: z.boolean(),
   available: z.boolean(),
   nuNumber: z.string().regex(/^\d{7}$/).optional(),
+  imageSize: z.strictObject({ width: positiveInt, height: positiveInt }).optional(),
   structure: z.array(volumeSchema),
 });
 
@@ -83,6 +85,34 @@ function splitFrontmatter(text: string, file: string) {
   return { frontmatter: match[1], body: match[2].trim() };
 }
 
+/**
+ * data/image-sizes/<id>.tsv: sizes of the images that differ from the book's
+ * `imageSize` (typically covers). Columns: image, width, height.
+ */
+function readImageSizes(id: string, images: Set<number>): Record<number, { width: number; height: number }> | undefined {
+  const path = join(imageSizesDir, `${id}.tsv`);
+  if (!existsSync(path)) return undefined;
+  const file = `data/image-sizes/${id}.tsv`;
+  const sizes: Record<number, { width: number; height: number }> = {};
+  const lines = readFileSync(path, "utf8").replace(/^﻿/, "").split(/\r?\n/);
+  lines.forEach((line, i) => {
+    if (i === 0 || line === "" || line.startsWith("#")) {
+      if (i === 0 && line.trim() !== "image\twidth\theight") errors.push(`${file}: header must be image<TAB>width<TAB>height`);
+      return;
+    }
+    const cells = line.split("\t").map(Number);
+    if (cells.length !== 3 || !cells.every((n) => Number.isInteger(n) && n > 0)) {
+      errors.push(`${file}:${i + 1}: expected three positive integers`);
+      return;
+    }
+    const [imageNo, width, height] = cells;
+    if (!images.has(imageNo)) errors.push(`${file}:${i + 1}: image ${imageNo} is not in the book's structure`);
+    if (sizes[imageNo]) errors.push(`${file}:${i + 1}: duplicate image ${imageNo}`);
+    sizes[imageNo] = { width, height };
+  });
+  return sizes;
+}
+
 function issues(file: string, error: z.ZodError) {
   for (const issue of error.issues) {
     errors.push(`${file}: ${issue.path.join(".") || "(root)"}: ${issue.message}`);
@@ -98,7 +128,13 @@ if (!siteResult.success) issues(siteFile, siteResult.error);
 const site = siteResult.data;
 
 // --- books ---
-const books: Array<z.infer<typeof bookSchema> & { notes?: string; totalVolumes: number }> = [];
+const books: Array<
+  z.infer<typeof bookSchema> & {
+    imageSizes?: Record<number, { width: number; height: number }>;
+    notes?: string;
+    totalVolumes: number;
+  }
+> = [];
 const seen = new Set<string>();
 
 for (const name of readdirSync(booksDir).filter((f) => f.endsWith(".md")).sort()) {
@@ -145,9 +181,19 @@ for (const name of readdirSync(booksDir).filter((f) => f.endsWith(".md")).sort()
   if (book.available && structure.length === 0) {
     warnings.push(`${book.id}: available but has no structure (single placeholder page)`);
   }
+  if (book.available && !book.imageSize) {
+    warnings.push(`${book.id}: available but has no imageSize (canvases use a default size)`);
+  }
+  const images = new Set<number>();
+  for (const v of structure) for (let n = v.startPage; n < v.startPage + v.maxPage; n++) images.add(n);
+  const imageSizes = readImageSizes(book.id, images);
+  if (imageSizes && !book.imageSize) {
+    errors.push(`${file}: data/image-sizes/${book.id}.tsv exists but imageSize is not set`);
+  }
 
   books.push({
     ...book,
+    ...(imageSizes && Object.keys(imageSizes).length > 0 ? { imageSizes } : {}),
     structure,
     totalVolumes: structure.length,
     ...(parts.body ? { notes: parts.body } : {}),

@@ -52,6 +52,18 @@ export function imageServiceId(book: BookEntry, imageNo: number): string {
   return `${IMAGE_SERVICE_BASE_URL}/${book.id}%2F${book.id}${String(imageNo).padStart(4, "0")}`;
 }
 
+/**
+ * Used when a book has no recorded `imageSize`. The scans are landscape
+ * spreads, so this only keeps the aspect ratio close; viewers fit the image
+ * to the canvas.
+ */
+export const DEFAULT_IMAGE_SIZE = { width: 4000, height: 3400 } as const;
+
+/** Canvas (and image) size of one image of a book. */
+export function canvasSize(book: BookEntry, imageNo: number): { width: number; height: number } {
+  return book.imageSizes?.[imageNo] ?? book.imageSize ?? DEFAULT_IMAGE_SIZE;
+}
+
 function canvasId(baseUrl: string, book: BookEntry, imageNo: number): string {
   return `${baseUrl}/canvas/${book.id}/p${imageNo}`;
 }
@@ -223,9 +235,7 @@ export class IIIFManifestGenerator {
   ): IIIFCanvas {
     const id = canvasId(this.baseUrl, book, imageNo);
 
-    // Standard page dimensions (can be adjusted based on actual scans)
-    const width = 1000;
-    const height = 1400;
+    const { width, height } = canvasSize(book, imageNo);
 
     // A shared spread is labelled with every volume it belongs to.
     const labels = volumes.flatMap((volume) => {
