@@ -6,9 +6,9 @@
 
 東方學デジタル圖書館 Ver.IIIF：展示汉籍书目、生成 IIIF Presentation API 3.0 manifest，并通过 Tify 阅读京都大学的数字化图像。
 
-- 技术栈：Next.js 15.3.3 App Router、React 19、TypeScript strict、Tailwind CSS 4、DaisyUI 5。
+- 技术栈：Next.js 16.4.5 App Router、React 19、TypeScript strict、Tailwind CSS 4、DaisyUI 5。
 - `src/app/`：页面与 Route Handlers。主要路径为 `/`、`/books`、`/viewer?book=<id>&page=<n>`、`/about`、`/sitepolicy`。
-- `src/app/manifest/[manifestId]/manifest.json/route.ts`：`GET /manifest/<id>/manifest.json`，返回 `application/ld+json`（IIIF 3.0 profile）的紧凑 JSON；未知 ID 返回 404。成功与 404 响应都带 CORS 头，并支持 `OPTIONS` 预检。响应逻辑在 `src/lib/manifest-response.ts`：按书与基址在内存中缓存序列化结果及其 gzip（Next 不压缩此路由的响应，由路由按 `Accept-Encoding` 自行返回 gzip）；设置了 `SITE_URL` 时 `Cache-Control` 为 public，否则为 private。
+- `src/app/manifest/[manifestId]/manifest.json/route.ts`：`GET /manifest/<id>/manifest.json`，返回 `application/ld+json`（IIIF 3.0 profile）的紧凑 JSON；未知 ID 返回 404。成功与 404 响应都带 CORS 头，并支持 `OPTIONS` 预检。响应逻辑在 `src/lib/manifest-response.ts`：按书与基址在内存中缓存序列化结果。响应不压缩：Next 16 既不压缩此路由的响应，也会去掉路由自设的 `Content-Encoding` 头，所以不要在路由里自行 gzip；大书的 manifest 有数 MB，生产环境应由前置的反向代理或 CDN 压缩。设置了 `SITE_URL` 时 `Cache-Control` 为 public，否则为 private。
 - 首页（`/`）按请求渲染，每次访问随机展示 6 部可阅读的书（`src/lib/random.ts`）。
 - `src/lib/generate-manifest.ts`：`IIIFManifestGenerator`，负责 manifest、canvas 与图像 annotation 的生成。
 - `data/books/<id>.md`：每部书一个文件。YAML frontmatter 存书目字段（含 `available` 是否可阅读、`nuNumber` 全国漢籍DB 编号、`imageSize` 扫描图像像素尺寸、`structure` 卷册），正文可写解题与修订依据。
@@ -42,7 +42,7 @@
 | `bun run start` | 启动已构建的应用 |
 | `bun run typecheck` | 类型检查（`tsc --noEmit`），需要已安装依赖及 Next.js 生成的类型 |
 | `bun run test` | 运行 `bun test` 单元测试（`src/**/*.test.ts`） |
-| `bun run lint` | ESLint（`next lint`，`eslint.config.mjs`，检查 `src` 与 `scripts`）；`bun run build` 也会执行 lint |
+| `bun run lint` | ESLint CLI（`eslint.config.mjs`，检查 `src` 与 `scripts`）；`next build` 不执行 lint，需单独运行 |
 
 - 需要执行安装脚本的依赖须列入 `package.json` 的 `trustedDependencies`；Bun 默认不运行依赖的生命周期脚本。
 - 单元测试覆盖 manifest 页号映射与基址处理；修改 `src/lib` 时补充或更新相应测试。

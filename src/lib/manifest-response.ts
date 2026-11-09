@@ -1,4 +1,3 @@
-import { gzipSync } from "node:zlib";
 import { library } from "@/lib/books";
 import { IIIFManifestGenerator } from "@/lib/generate-manifest";
 
@@ -25,24 +24,22 @@ export function cacheControl(siteUrlConfigured: boolean): string {
     : "private, max-age=3600";
 }
 
-export interface ManifestBody {
-  json: string;
-  /** gzip of `json`, made on first request for it */
-  gzip(): Uint8Array;
-}
-
 const MAX_CACHED = 32;
-const bodies = new Map<string, ManifestBody>();
+const bodies = new Map<string, string>();
 
 /**
- * Manifest for a book, or null for an unknown ID. The serialised JSON (and
- * its gzip) is memoised per base URL, since large books are several MB;
- * the least recently used entry is evicted.
+ * Serialised manifest for a book, or null for an unknown ID. The JSON is
+ * memoised per base URL, since large books are several MB; the least
+ * recently used entry is evicted.
+ *
+ * It is served uncompressed: Next 16 drops a route handler's
+ * Content-Encoding header and does not compress these responses itself,
+ * so compression is left to the reverse proxy in front of the app.
  */
-export function manifestBody(bookId: string, baseUrl: string): ManifestBody | null {
+export function manifestBody(bookId: string, baseUrl: string): string | null {
   const key = `${baseUrl}\n${bookId}`;
   const hit = bodies.get(key);
-  if (hit) {
+  if (hit !== undefined) {
     bodies.delete(key);
     bodies.set(key, hit);
     return hit;
@@ -50,21 +47,7 @@ export function manifestBody(bookId: string, baseUrl: string): ManifestBody | nu
   const manifest = new IIIFManifestGenerator(library, baseUrl).getManifest(bookId);
   if (!manifest) return null;
   const json = JSON.stringify(manifest);
-  let gzipped: Uint8Array | undefined;
-  const body: ManifestBody = { json, gzip: () => (gzipped ??= gzipSync(json)) };
-  bodies.set(key, body);
+  bodies.set(key, json);
   if (bodies.size > MAX_CACHED) bodies.delete(bodies.keys().next().value!);
-  return body;
-}
-
-/** Whether the client accepts gzip (q=0 means refused). */
-export function acceptsGzip(acceptEncoding: string | null): boolean {
-  return (acceptEncoding ?? "")
-    .split(",")
-    .map((part) => part.trim().split(";"))
-    .some(([coding, ...params]) => {
-      if (coding.trim().toLowerCase() !== "gzip" && coding.trim() !== "*") return false;
-      const q = params.map((p) => p.trim()).find((p) => p.startsWith("q="));
-      return q === undefined || Number(q.slice(2)) > 0;
-    });
+  return json;
 }

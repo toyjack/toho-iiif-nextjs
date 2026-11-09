@@ -72,8 +72,6 @@ export default function SearchBox<T extends SearchableBook & { available?: boole
     }
   };
 
-  let lastType: Suggestion["type"] | null = null;
-
   return (
     <div className="relative">
       <input
@@ -102,8 +100,7 @@ export default function SearchBox<T extends SearchableBook & { available?: boole
           className="absolute left-0 right-0 z-30 mt-1 max-h-96 overflow-y-auto rounded-box border border-base-200 bg-base-100 p-1 shadow-lg"
         >
           {suggestions.map((s, i) => {
-            const header = s.type !== lastType ? GROUP_LABELS[s.type] : null;
-            lastType = s.type;
+            const header = s.type !== suggestions[i - 1]?.type ? GROUP_LABELS[s.type] : null;
             return (
               <li key={`${s.type}:${s.type === "title" ? s.book.id : s.value}`} role="presentation">
                 {header && (

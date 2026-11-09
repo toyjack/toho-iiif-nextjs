@@ -46,7 +46,11 @@ export default function BooksComp({
   // The input keeps its own state so IME composition is never interrupted;
   // it follows the URL when that changes from outside (back/forward).
   const [input, setInput] = useState(q);
-  useEffect(() => setInput(q), [q]);
+  const [syncedQ, setSyncedQ] = useState(q);
+  if (q !== syncedQ) {
+    setSyncedQ(q);
+    setInput(q);
+  }
 
   const updateParams = (changes: Partial<Record<keyof typeof PARAM, string | null>>) => {
     const params = new URLSearchParams(searchParams.toString());
