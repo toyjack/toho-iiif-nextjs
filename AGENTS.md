@@ -9,7 +9,7 @@
 - 技术栈：Next.js 16.4.5 App Router、React 19、TypeScript strict、Tailwind CSS 4、DaisyUI 5。
 - `src/app/`：页面与 Route Handlers。主要路径为 `/`、`/books`、`/viewer?book=<id>&page=<n>`、`/about`、`/sitepolicy`。
 - `src/app/manifest/[manifestId]/manifest.json/route.ts`：`GET /manifest/<id>/manifest.json`，返回 `application/ld+json`（IIIF 3.0 profile）的紧凑 JSON；未知 ID 返回 404。成功与 404 响应都带 CORS 头，并支持 `OPTIONS` 预检。响应逻辑在 `src/lib/manifest-response.ts`：按书与基址在内存中缓存序列化结果。响应不压缩：Next 16 既不压缩此路由的响应，也会去掉路由自设的 `Content-Encoding` 头，所以不要在路由里自行 gzip；大书的 manifest 有数 MB，生产环境应由前置的反向代理或 CDN 压缩。设置了 `SITE_URL` 时 `Cache-Control` 为 public，否则为 private。
-- 首页（`/`）按请求渲染，每次访问随机展示 6 部可阅读的书（`src/lib/random.ts`）。
+- 首页（`/`）按请求渲染，每次访问随机展示 6 部可阅读的书（`src/lib/random.ts`）。首页检索框是提交到 `/books?q=` 的普通 GET 表单，不加载检索数据。
 - `src/lib/generate-manifest.ts`：`IIIFManifestGenerator`，负责 manifest、canvas 与图像 annotation 的生成。
 - `data/books/<id>.md`：每部书一个文件。YAML frontmatter 存书目字段（含 `available` 是否可阅读、`nuNumber` 全国漢籍DB 编号、`imageSize` 扫描图像像素尺寸、`structure` 卷册），正文可写解题与修订依据。
 - 图像尺寸来自图像服务的 `info.json`，用作 manifest 中 canvas 与图像的宽高：
@@ -23,12 +23,13 @@
 - `scripts/build-data.ts`：校验数据并生成 `src/generated/books.json`（不入库）；`dev`、`build`、`test`、`typecheck` 脚本会先自动运行它，单独运行用 `bun run data`。开发服务器运行中修改数据后需重新运行 `bun run data`。schema 错误会使构建失败；卷册页码缺口、非 1 页的重叠等仅输出警告。
 - `src/lib/books.ts`：书目数据的唯一读取入口（`library`、`getBook`、`availableBooks`、`bookSummaries`），页面和路由不要直接 import 生成的 `books.json`。
 - `data/variants/variants.tsv`：异体字对照表（`standard<TAB>variants<TAB>source<TAB>note`，每项一个字，一行一个等价组），由 `build-data` 校验并生成 `src/generated/variants.json`。当前为示例表，待替换为正式表。
-- `src/lib/search/`：检索用规范化（异体字归并、去空白与异体字选择符、兼容汉字与全角归一）、拼音匹配、检索与候补。只用于匹配，不改变显示文字。`/books` 在浏览器端检索，筛选与检索词保存在 URL 参数中。
+- `src/lib/search/`：检索用规范化（异体字归并、去空白与异体字选择符、兼容汉字与全角归一）、拼音匹配、检索与候补。只用于匹配，不改变显示文字。`/books` 在浏览器端检索，筛选与检索词保存在 URL 参数中（`q`、`category`、`dynasty`、`type`、`available`、`sort`、`order`，页码 `p`，每页 50 部）；输入与筛选用 `replaceState`，翻页用 `pushState`。列表排序用 `src/lib/text-compare.ts`，不要用 `localeCompare`（Bun 与浏览器对扩展区汉字排序不同，会造成 hydration 不一致）。
 - 拼音：`scripts/pinyin.ts` 在构建时用 `pinyin-pro`（仅开发依赖，不进入前端）为书名、著者、卷册标题、分类、朝代生成 `src/generated/pinyin.json`。先经异体字归并再取读音，多音字保留全部读音；`/books` 在首次输入拉丁字母时才加载该文件。缺读音的字在构建警告中列出。
 - `src/types/index.ts`：书目、卷册和 IIIF 类型；`@/*` 别名对应 `src/*`。
-- `src/components/`：书目筛选、排序、导航等共用组件。
-- `src/app/viewer/`：Tify 集成；日文翻译在 `public/i18n/tify/ja.json`。
-- `src/app/globals.css`：Tailwind、DaisyUI 与 `chinese-classics` 主题。
+- `src/components/`：共用 UI 组件，文件名 kebab-case，默认为 Server Component。主要有 `book-row`（书目表格行、窄屏行、卡片）、`filter-panel`、`pagination`、`dialog`（原生 `<dialog>`）、`notice`（空、错误、提示状态）、`page-header`、`field`、`icon`（全部功能图标，不引入图标库）、`external-link`、`stat-list`、`category-index`、`viewer-toolbar`、`book-info-dialog`。只在 `books.tsx` 等客户端组件内部使用的组件不写 `"use client"`。
+- UI 设计：`docs/ui-design-system.md`（tokens、组件规范、用语表）、`docs/ui-refactor-plan.md`（重构阶段与验收标准）、`docs/ui-audit.md`（改造前的审计）。界面用语与站名常量在 `src/lib/ui-text.ts`；首页与 `/about` 的统计和分类分组在 `src/lib/collection.ts`。
+- `src/app/viewer/`：Tify 集成；日文翻译在 `public/i18n/tify/ja.json`。有书时页面根元素为 `#reader`：`globals.css` 用 `body:has(#reader)` 隐藏站点页头与页脚，由 48px 的 `ViewerToolbar` 代替，Tify 高度由 flex 布局决定；Tify 自带的标题列也由 `globals.css` 隐藏（规则须放在 CSS 层之外，否则敌不过 Tify 的样式）。工具栏的「漢籍一覧」链接经 `src/lib/last-list.ts` 回到上次的列表 URL。
+- `src/app/globals.css`：Tailwind、DaisyUI 与 `chinese-classics` 主题（design tokens）。金色 `primary` 只作填充与线条，带颜色的文字用 `text-primary-text`（古銅）；辅助文字用 `text-muted`，不用 `text-base-content/70` 之类的透明度；控件边框用 `border-border-strong`；长文用 `.doc`。DaisyUI 的组件样式位于 `utilities` 层，覆盖它们的规则也写在该层。
 
 ## 开发与验证
 
@@ -50,7 +51,7 @@
 - `bookType` 的显示名统一使用 `src/lib/book-type.ts`。客户端组件不要 import `@/lib/books`，否则整份书目会进入浏览器 bundle。
 - `/api/health` 供 Dockerfile 的 `HEALTHCHECK` 使用。仅修改文档时检查差异与引用即可。
 - 书目或 IIIF 相关修改需验证：书目列表、已知 ID 的 manifest、未知 ID 的 404，以及阅读器加载与翻页；多卷逻辑变更还需检查卷册边界。
-- UI 修改检查桌面和窄屏效果，并保留日文界面与现有主题。
+- UI 修改检查桌面和窄屏效果（至少 375、768、1280），并保留日文界面与现有主题；遵循 `docs/ui-design-system.md`，界面文字从 `src/lib/ui-text.ts` 取用。
 - `next.config.ts` 使用 `output: "standalone"`；Dockerfile 基于固定版本的 `oven/bun` Alpine 镜像，以 `bun server.js` 运行独立输出；升级 Bun 时同步修改 `packageManager`、`engines` 与 Dockerfile 的镜像标签。
 
 ## 实现约定与注意事项

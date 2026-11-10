@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SITE_NAME } from "@/lib/ui-text";
+import Icon from "./icon";
 
 const NAV_ITEMS = [
   { href: "/", label: "ホーム" },
@@ -13,46 +15,51 @@ const NAV_ITEMS = [
 function HeaderComp() {
   const pathname = usePathname();
 
-  const links = NAV_ITEMS.map(({ href, label }) => {
-    const active = pathname === href;
-    return (
-      <li key={href}>
-        <Link
-          href={href}
-          aria-current={active ? "page" : undefined}
-          className={`font-medium ${active ? "text-primary" : ""}`}
-        >
-          {label}
-        </Link>
-      </li>
-    );
-  });
+  const links = (variant: "bar" | "menu") =>
+    NAV_ITEMS.map(({ href, label }) => {
+      const active = pathname === href;
+      return (
+        <li key={href}>
+          <Link
+            href={href}
+            aria-current={active ? "page" : undefined}
+            className={
+              variant === "bar"
+                ? // current: ink 700 + 2px gold underline; others: underline on hover
+                  `flex h-14 items-center border-b-2 px-3 text-sm transition-colors duration-150 ${
+                    active ? "border-primary font-bold" : "border-transparent hover:underline hover:underline-offset-4"
+                  }`
+                : `flex min-h-11 items-center px-3 text-sm ${active ? "font-bold underline decoration-primary decoration-2 underline-offset-4" : ""}`
+            }
+          >
+            {label}
+          </Link>
+        </li>
+      );
+    });
 
   return (
-    <div className="navbar bg-base-100 shadow-sm border-b border-base-200">
-      <div className="navbar-start">
-        <Link href="/" className="btn btn-ghost text-xl font-bold text-primary">
-          <span className="hidden sm:inline">東方学IIIF図書館</span>
-          <span className="sm:hidden">東IIIF</span>
+    <header className="border-b border-base-300 bg-base-100">
+      <div className="mx-auto flex h-14 w-full max-w-page items-center justify-between gap-4 px-4 md:px-6">
+        <Link href="/" className="font-serif text-base leading-tight font-bold sm:text-lg">
+          {SITE_NAME}
         </Link>
-      </div>
-      <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1">{links}</ul>
-      </div>
-      <div className="navbar-end lg:hidden">
+        <nav aria-label="メイン" className="hidden md:block">
+          <ul className="flex items-center">{links("bar")}</ul>
+        </nav>
         {/* key={pathname} remounts the menu after navigation so it closes. */}
-        <details key={pathname} className="dropdown dropdown-end">
-          <summary className="btn btn-ghost" aria-label="メニュー">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+        <details key={pathname} className="dropdown dropdown-end md:hidden">
+          <summary className="btn btn-ghost btn-square size-11" aria-label="メニュー">
+            <Icon name="menu" size={20} />
           </summary>
-          <ul className="menu dropdown-content bg-base-100 rounded-box z-50 mt-2 w-56 p-2 shadow border border-base-200">
-            {links}
-          </ul>
+          <nav aria-label="メイン">
+            <ul className="dropdown-content z-50 mt-1 flex w-56 flex-col rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
+              {links("menu")}
+            </ul>
+          </nav>
         </details>
       </div>
-    </div>
+    </header>
   );
 }
 

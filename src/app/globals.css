@@ -2,60 +2,242 @@
 
 @plugin "daisyui";
 
+/*
+ * Design tokens: docs/ui-design-system.md §2, §3 and §8.
+ * Paper and ink, with gold for fills and lines only. Gold is never a text
+ * colour (2.74:1 on paper); use --color-primary-text for coloured text.
+ */
 @plugin "daisyui/theme" {
   name: "chinese-classics";
   default: true;
   prefersdark: false;
   color-scheme: light;
 
-  /* Base colors - traditional Chinese paper and ink */
-  --color-base-100: oklch(97% 0.01 50); /* Warm rice paper white */
-  --color-base-200: oklch(94% 0.02 45); /* Aged paper cream */
-  --color-base-300: oklch(90% 0.03 40); /* Antique parchment */
-  --color-base-content: oklch(18% 0.02 260); /* Traditional ink black */
+  /* Paper, surface, divider, ink */
+  --color-base-100: oklch(98% 0.005 85);
+  --color-base-200: oklch(95.5% 0.008 85);
+  --color-base-300: oklch(89% 0.012 85);
+  --color-base-content: oklch(22% 0.015 260);
 
-  /* Primary - Imperial gold */
-  --color-primary: oklch(68% 0.15 85); /* Refined imperial gold */
-  --color-primary-content: oklch(15% 0.02 85);
+  /* Gold: button fills and current-item underlines only */
+  --color-primary: oklch(68% 0.15 85);
+  --color-primary-content: oklch(20% 0.03 85);
+  /* Celadon: reserved, not used by components */
+  --color-secondary: oklch(42% 0.07 165);
+  --color-secondary-content: oklch(98% 0.005 85);
+  /* Vermilion: small accents only */
+  --color-accent: oklch(50% 0.17 35);
+  --color-accent-content: oklch(98% 0.005 85);
+  --color-neutral: oklch(30% 0.015 260);
+  --color-neutral-content: oklch(98% 0.005 85);
 
-  /* Secondary - Jade green */
-  --color-secondary: oklch(55% 0.12 160); /* Classical jade */
-  --color-secondary-content: oklch(95% 0.01 160);
+  --color-info: oklch(45% 0.09 235);
+  --color-info-content: oklch(98% 0.005 85);
+  --color-success: oklch(44% 0.1 150);
+  --color-success-content: oklch(98% 0.005 85);
+  --color-warning: oklch(48% 0.11 58);
+  --color-warning-content: oklch(98% 0.005 85);
+  --color-error: oklch(47% 0.18 20);
+  --color-error-content: oklch(98% 0.005 85);
 
-  /* Accent - Vermillion red */
-  --color-accent: oklch(58% 0.20 25); /* Traditional Chinese red */
-  --color-accent-content: oklch(95% 0.01 25);
+  --radius-selector: 0.125rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.25rem;
 
-  /* Neutral - Scholar's ink */
-  --color-neutral: oklch(35% 0.03 250); /* Subtle ink gray */
-  --color-neutral-content: oklch(95% 0.01 250);
+  /* DaisyUI defaults: controls are multiples of these (40px / 32px for -sm) */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
 
-  /* Info - Sky blue */
-  --color-info: oklch(60% 0.15 230); /* Porcelain blue */
-  --color-info-content: oklch(95% 0.01 230);
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
 
-  /* Success - Bamboo green */
-  --color-success: oklch(62% 0.18 140); /* Fresh bamboo */
-  --color-success-content: oklch(95% 0.01 140);
+@theme {
+  --font-sans:
+    "Helvetica Neue", "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo",
+    "Noto Sans CJK JP", "Noto Sans JP", system-ui, sans-serif;
+  --font-serif:
+    "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif CJK JP", "Noto Serif JP", "Source Han Serif JP",
+    "Songti TC", "PMingLiU", "HanaMinA", "HanaMinB", serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Noto Sans Mono CJK JP", monospace;
 
-  /* Warning - Autumn persimmon */
-  --color-warning: oklch(72% 0.16 70); /* Persimmon orange */
-  --color-warning-content: oklch(15% 0.02 70);
+  /* Bronze: the text form of gold (links, outline-button text) */
+  --color-primary-text: oklch(42% 0.085 80);
+  /* Secondary text; the only other text colour besides ink */
+  --color-muted: oklch(46% 0.015 260);
+  /* Borders of inputs, selects, checkboxes and outline buttons (≥ 3:1) */
+  --color-border-strong: oklch(58% 0.015 260);
+  /* Search-hit highlight */
+  --color-mark: oklch(90% 0.09 95);
 
-  /* Error - Cinnabar red */
-  --color-error: oklch(55% 0.22 15); /* Traditional cinnabar */
-  --color-error-content: oklch(95% 0.01 15);
+  --container-page: 72rem;
+  --container-prose: 44rem;
+}
 
-  /* Classical Chinese styling */
-  --radius-selector: 0.125rem; /* Minimal radius for classical feel */
-  --radius-field: 0.25rem; /* Subtle rounded corners */
-  --radius-box: 0.375rem; /* Gentle box rounding */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    line-break: strict;
+    text-autospace: normal;
+  }
 
-  --size-selector: 0.125rem;
-  --size-field: 0.125rem;
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
 
-  --border: 1px; /* Delicate borders like brush strokes */
+  /* One focus ring everywhere: ink, not gold (16:1 against paper). */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-base-content);
+    outline-offset: 2px;
+  }
 
-  --depth: 1; /* Subtle shadows like paper texture */
-  --noise: 0; /* Clean, scholarly appearance */
+  /*
+   * The reader (/viewer with a book) has its own toolbar instead of the site
+   * header and footer (ui-design-system.md §4.6). Notice pages under /viewer
+   * have no #reader and keep them.
+   */
+  body:has(#reader) > header,
+  body:has(#reader) > footer {
+    display: none;
+  }
+
+  mark {
+    background-color: var(--color-mark);
+    color: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}
+
+/*
+ * DaisyUI ships its components in the utilities layer; these come after it.
+ * Control borders use --color-border-strong (DaisyUI's 20% ink is ~1.4:1).
+ */
+@layer utilities {
+  .input,
+  .select {
+    --input-color: var(--color-border-strong);
+  }
+
+  .checkbox:not(:checked, :indeterminate) {
+    --input-color: var(--color-border-strong);
+  }
+
+  /*
+   * Overlays only fade in, 150ms, no slide or scale (§5.3). DaisyUI starts an
+   * opening modal at `visibility: hidden`, which also stops showModal() from
+   * focusing the first control; keep it visible and fade opacity only.
+   */
+  .modal {
+    transition:
+      opacity 150ms ease-out,
+      background-color 150ms ease-out;
+  }
+
+  @starting-style {
+    .modal[open] {
+      visibility: visible;
+      opacity: 0;
+    }
+  }
+
+  .modal .modal-box {
+    translate: 0;
+    scale: 1;
+    transition: opacity 150ms ease-out;
+  }
+
+  /* No press-down shift (§5.1 Active); DaisyUI nudges active buttons 0.5px. */
+  .btn:active:not(.btn-active) {
+    translate: none;
+  }
+}
+
+@layer components {
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: 0.5rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-field);
+    background-color: var(--color-base-content);
+    color: var(--color-base-100);
+    font-size: 0.875rem;
+    transform: translateY(-200%);
+  }
+
+  .skip-link:focus-visible {
+    transform: none;
+  }
+
+  /*
+   * Long-form text (/about, /sitepolicy): body 16px / 1.8 in ink, serif h2,
+   * vertical rhythm from the container (§1.2, §3.2). Direct children only,
+   * so embedded components (CategoryIndex lists) keep their own styles.
+   */
+  .doc {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    line-height: 1.8;
+  }
+
+  .doc > h2 {
+    margin-top: 1.5rem;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    line-height: 1.4;
+    font-weight: 700;
+  }
+
+  .doc > h3 {
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: 700;
+  }
+
+  .doc > ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-left: 1.25em;
+    list-style: disc;
+  }
+
+  .doc code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+
+  /* Bronze inline link; always underlined. */
+  .link-text {
+    color: var(--color-primary-text);
+    text-decoration-line: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .link-text:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+/*
+ * Tify repeats the title as a second <h1>; the reader toolbar's <h1> already
+ * shows it. Unlayered on purpose: Tify's own stylesheet is unlayered and would
+ * beat any rule inside a cascade layer.
+ */
+#tify .tify-header-column.-title {
+  display: none;
 }

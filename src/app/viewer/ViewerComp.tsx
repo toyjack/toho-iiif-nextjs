@@ -1,16 +1,21 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { UI } from "@/lib/ui-text";
 
-const TifyViewer = dynamic(() =>
-  import('./tify'),
-  { ssr: false }
-);
-
-function ViewerComp({manifestUrl, iiifPage}: {manifestUrl: string, iiifPage: number}) {
+function Loading() {
   return (
-    <TifyViewer iiifPage={iiifPage} manifestUrl={manifestUrl} />
-  )
+    <div role="status" className="flex h-full items-center justify-center text-sm text-muted">
+      {UI.loadingImages}
+    </div>
+  );
 }
 
-export default ViewerComp
+// Tify touches window on import, so it is only ever loaded in the browser.
+const TifyViewer = dynamic(() => import("./tify"), { ssr: false, loading: Loading });
+
+function ViewerComp({ manifestUrl, iiifPage }: { manifestUrl: string; iiifPage: number }) {
+  return <TifyViewer iiifPage={iiifPage} manifestUrl={manifestUrl} />;
+}
+
+export default ViewerComp;

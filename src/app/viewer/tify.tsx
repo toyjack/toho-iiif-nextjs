@@ -21,9 +21,6 @@ export default function TifyViewer({ manifestUrl, iiifPage }: { manifestUrl: str
     }
   }, [manifestUrl, iiifPage]);
 
-  return (
-    <div id="tify" style={{ height: "640px", minHeight: "90vh" }}>
-      IIIF Viewer
-    </div>
-  );
+  // Fills the space the reader layout gives it; Tify replaces the contents on mount.
+  return <div id="tify" className="h-full" />;
 }
