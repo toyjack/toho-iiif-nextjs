@@ -1,8 +1,8 @@
 /**
- * Site name in the interface (header, footer, home, page titles). Which of the
- * three spellings to settle on is still open (ui-design-system.md §7-1); change
- * it here. Prose in /about and /sitepolicy and the IIIF manifest's provider
- * label (generate-manifest.ts) spell it out separately.
+ * Site name in the interface (header, footer, home, page titles); decided
+ * 2026-11-10 (ui-design-system.md §7-1). Prose in /about and /sitepolicy and
+ * the IIIF manifest's provider label (generate-manifest.ts) spell it out
+ * separately; /about's 「東方學デジタル圖書館」 is the original site's name.
  */
 export const SITE_NAME = "東方学IIIF図書館";
 

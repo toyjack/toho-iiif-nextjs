@@ -4,7 +4,7 @@
 
 ## 项目与目录
 
-東方學デジタル圖書館 Ver.IIIF：展示汉籍书目、生成 IIIF Presentation API 3.0 manifest，并通过 Tify 阅读京都大学的数字化图像。
+東方学IIIF図書館：展示汉籍书目、生成 IIIF Presentation API 3.0 manifest，并通过 Tify 阅读京都大学的数字化图像。
 
 - 技术栈：Next.js 16.4.5 App Router、React 19、TypeScript strict、Tailwind CSS 4、DaisyUI 5。
 - `src/app/`：页面与 Route Handlers。主要路径为 `/`、`/books`、`/viewer?book=<id>&page=<n>`、`/about`、`/sitepolicy`。

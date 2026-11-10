@@ -2,6 +2,8 @@ import Link from "next/link";
 import { SITE_NAME } from "@/lib/ui-text";
 import ExternalLink from "./external-link";
 
+// The year is taken when the page is rendered: per request for dynamic pages,
+// at build time for static ones (/books, /about, …), so a rebuild updates it.
 function FooterComp() {
   return (
     <footer className="bg-base-200 text-[0.8125rem] leading-normal">
@@ -18,7 +20,7 @@ function FooterComp() {
             <ExternalLink href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</ExternalLink>
             でライセンスされています
           </p>
-          <p className="text-muted">© 2025 INSTITUTE FOR RESEARCH IN HUMANITIES, KYOTO UNIVERSITY.</p>
+          <p className="text-muted">© {new Date().getFullYear()} INSTITUTE FOR RESEARCH IN HUMANITIES, KYOTO UNIVERSITY.</p>
         </div>
         <nav aria-label="サイト情報">
           <ul className="flex gap-4 md:flex-col md:gap-1.5">
