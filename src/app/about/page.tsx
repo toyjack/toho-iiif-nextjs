@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import BetaNotice from "@/components/beta-notice";
 import CategoryIndex from "@/components/category-index";
 import ExternalLink from "@/components/external-link";
 import PageHeader from "@/components/page-header";
@@ -29,6 +30,8 @@ function AboutPage() {
           書誌の記述と冊・巻の構成は元のサイトのデータを引き継いでおり、原文の表記や旧字形はそのまま収録しています。
         </p>
 
+        <BetaNotice />
+
         <h2>収録内容</h2>
         <StatList stats={collectionStats()} />
         <div className="mt-2">
@@ -57,6 +60,9 @@ function AboutPage() {
           </dd>
         </dl>
         <p>マニフェストでは冊・巻ごとの目次（Range）を提供しています。</p>
+        <p>
+          試験公開中のため、マニフェストの URL や内容は予告なく変わることがあります。論文などで引用する場合は、各漢籍の書誌情報にある旧サイトの URL をお使いください。
+        </p>
 
         <h2>ライセンス</h2>
         <p>
@@ -64,7 +70,16 @@ function AboutPage() {
           <Link href="/sitepolicy" className="link-text">
             利用規約
           </Link>
-          をご覧ください。
+          をご覧ください。ライセンスは試験公開の期間中に変更されることがあります。
+        </p>
+
+        <h2>更新履歴</h2>
+        <p>
+          機能と収録内容の変更は
+          <Link href="/changelog" className="link-text">
+            更新履歴
+          </Link>
+          にまとめています。
         </p>
 
         <h2>提供</h2>

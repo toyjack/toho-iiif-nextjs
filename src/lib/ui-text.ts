@@ -57,6 +57,24 @@ export const UI = {
   publication: "出版事項",
   collection: "所蔵",
   loadingImages: "画像を読み込んでいます…",
+  changelog: "更新履歴",
+} as const;
+
+/**
+ * Test-release cautions (beta notice). Shown on the home page, /about,
+ * /sitepolicy and in the reader's bibliographic dialog; one wording for all.
+ */
+export const BETA = {
+  badge: "試験公開",
+  title: "試験公開版についてのご注意",
+  lead: "本サイトは試験公開中のシステムです。",
+  points: [
+    "IIIF マニフェストの URL は確定しておらず、予告なく変わることがあります。",
+    "公開している書誌・画像などの内容は、予告なく変更・削除されることがあります。",
+    "ライセンス（利用条件）は今後変更される可能性があります。",
+    "論文などでの参照先としての利用はお勧めしません。引用が必要な場合は、旧サイト（東方學デジタル圖書館）の URL をお使いください。",
+  ],
+  manifestShort: "試験公開中のため、マニフェストの URL は予告なく変わることがあります。引用には旧サイトの URL をお使いください。",
 } as const;
 
 /**

@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { BookCard } from "@/components/book-row";
 import CategoryIndex from "@/components/category-index";
+import BetaNotice from "@/components/beta-notice";
 import ExternalLink from "@/components/external-link";
 import HomeSearch from "@/components/home-search";
 import StatList from "@/components/stat-list";
@@ -35,6 +36,7 @@ export default async function Home() {
         </div>
         <HomeSearch />
         <StatList stats={collectionStats()} />
+        <BetaNotice />
       </section>
 
       <section aria-labelledby="browse-heading" className="flex flex-col gap-6">

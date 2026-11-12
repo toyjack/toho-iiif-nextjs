@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SITE_NAME } from "@/lib/ui-text";
+import { BETA, SITE_NAME } from "@/lib/ui-text";
 import Icon from "./icon";
 
 const NAV_ITEMS = [
@@ -41,9 +41,17 @@ function HeaderComp() {
   return (
     <header className="border-b border-base-300 bg-base-100">
       <div className="mx-auto flex h-14 w-full max-w-page items-center justify-between gap-4 px-4 md:px-6">
-        <Link href="/" className="font-serif text-base leading-tight font-bold sm:text-lg">
-          {SITE_NAME}
-        </Link>
+        <div className="flex min-w-0 items-center gap-2">
+          <Link href="/" className="font-serif text-base leading-tight font-bold sm:text-lg">
+            {SITE_NAME}
+          </Link>
+          <Link
+            href="/changelog"
+            className="badge badge-sm badge-outline shrink-0 border-warning text-warning hover:underline"
+          >
+            {BETA.badge}
+          </Link>
+        </div>
         <nav aria-label="メイン" className="hidden md:block">
           <ul className="flex items-center">{links("bar")}</ul>
         </nav>

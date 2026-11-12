@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import BetaNotice from "@/components/beta-notice";
 import ExternalLink from "@/components/external-link";
 import PageHeader from "@/components/page-header";
 
@@ -17,6 +19,8 @@ function SitePolicyPage() {
         </p>
         <p>利用者は、本サイトを利用することにより、以下の利用規約に同意したものとみなされます。</p>
 
+        <BetaNotice />
+
         <h2>ライセンスについて</h2>
         <p>
           本サイトの漢籍コンテンツは、
@@ -24,6 +28,13 @@ function SitePolicyPage() {
             Creative Commons 表示 4.0 国際ライセンス (CC BY 4.0)
           </ExternalLink>
           の下で提供されています。
+        </p>
+        <p>
+          本サイトは試験公開中のため、ライセンスを含む利用条件は今後変更される可能性があります。変更した場合は
+          <Link href="/changelog" className="link-text">
+            更新履歴
+          </Link>
+          でお知らせします。
         </p>
 
         <h3>ご利用いただけること</h3>

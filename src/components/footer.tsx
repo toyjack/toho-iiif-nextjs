@@ -18,7 +18,7 @@ function FooterComp() {
           <p className="text-muted">
             本サイトの漢籍コンテンツは
             <ExternalLink href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</ExternalLink>
-            でライセンスされています
+            でライセンスされています（試験公開中のため、変更されることがあります）
           </p>
           <p className="text-muted">© {new Date().getFullYear()} INSTITUTE FOR RESEARCH IN HUMANITIES, KYOTO UNIVERSITY.</p>
         </div>
@@ -32,6 +32,11 @@ function FooterComp() {
             <li>
               <Link className="hover:underline" href="/sitepolicy">
                 利用規約
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:underline" href="/changelog">
+                更新履歴
               </Link>
             </li>
           </ul>

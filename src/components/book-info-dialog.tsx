@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { kansekiDbUrl, legacySiteUrl } from "@/lib/book-display";
-import { UI } from "@/lib/ui-text";
+import { BETA, UI } from "@/lib/ui-text";
 import Dialog from "./dialog";
 import ExternalLink from "./external-link";
 import Icon from "./icon";
@@ -92,6 +92,7 @@ export default function BookInfoDialog({ info }: { info: BookInfo }) {
             <p role="status" className="min-h-5 text-[0.8125rem] text-success">
               {copied ? UI.copied : ""}
             </p>
+            <p className="text-[0.8125rem] leading-normal text-warning">{BETA.manifestShort}</p>
           </div>
         </div>
       </Dialog>

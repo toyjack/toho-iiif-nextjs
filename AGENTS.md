@@ -7,7 +7,9 @@
 東方学IIIF図書館：展示汉籍书目、生成 IIIF Presentation API 3.0 manifest，并通过 Tify 阅读京都大学的数字化图像。
 
 - 技术栈：Next.js 16.4.5 App Router、React 19、TypeScript strict、Tailwind CSS 4、DaisyUI 5。
-- `src/app/`：页面与 Route Handlers。主要路径为 `/`、`/books`、`/viewer?book=<id>&page=<n>`、`/about`、`/sitepolicy`。
+- `src/app/`：页面与 Route Handlers。主要路径为 `/`、`/books`、`/viewer?book=<id>&page=<n>`、`/about`、`/sitepolicy`、`/changelog`。
+- 试验公开：页头「試験公開」标记，首页、`/about`、`/sitepolicy`、`/changelog` 用 `beta-notice` 组件提示 manifest URL、内容与许可可能变化、引用请用旧站 URL；书誌情報对话框有简短提示。文案在 `ui-text.ts` 的 `BETA`。
+- `/changelog`（更新履歴）的条目在 `src/lib/changelog.ts`，分「機能の変更」与「収録内容の変更」，新的在前。功能或书目数据有用户可见的变化时同步追加。
 - `src/app/manifest/[manifestId]/manifest.json/route.ts`：`GET /manifest/<id>/manifest.json`，返回 `application/ld+json`（IIIF 3.0 profile）的紧凑 JSON；未知 ID 返回 404。成功与 404 响应都带 CORS 头，并支持 `OPTIONS` 预检。响应逻辑在 `src/lib/manifest-response.ts`：按书与基址在内存中缓存序列化结果。响应不压缩：Next 16 既不压缩此路由的响应，也会去掉路由自设的 `Content-Encoding` 头，所以不要在路由里自行 gzip；大书的 manifest 有数 MB，生产环境应由前置的反向代理或 CDN 压缩。设置了 `SITE_URL` 时 `Cache-Control` 为 public，否则为 private。
 - 首页（`/`）按请求渲染，每次访问随机展示 6 部可阅读的书（`src/lib/random.ts`）。首页检索框是提交到 `/books?q=` 的普通 GET 表单，不加载检索数据。
 - `src/lib/generate-manifest.ts`：`IIIFManifestGenerator`，负责 manifest、canvas 与图像 annotation 的生成。
