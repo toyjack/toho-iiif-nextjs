@@ -34,6 +34,7 @@ export const UI = {
   clearAll: "すべてクリア",
   sort: "並び順",
   sortRelevance: "関連度",
+  sortId: "ID",
   sortTitle: "書名",
   sortCategory: "分類",
   sortDynasty: "時代",

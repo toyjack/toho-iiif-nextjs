@@ -24,7 +24,7 @@ import Pagination from "./pagination";
 import { BookListSkeleton } from "./skeleton";
 import SearchBox from "./search-box";
 
-type SortOption = "relevance" | "title" | "category" | "dynasty";
+type SortOption = "relevance" | "id" | "title" | "category" | "dynasty";
 
 /** Query-string keys for every piece of list state. */
 const PARAM = {
@@ -133,7 +133,7 @@ export default function BooksComp({
   const availableCount = useMemo(() => books.filter((b) => b.available).length, [books]);
 
   const query = input.trim();
-  const sortBy: SortOption = sortParam ?? (query ? "relevance" : "title");
+  const sortBy: SortOption = sortParam ?? (query ? "relevance" : "id");
 
   const results = useMemo(() => {
     const hits = search(index, query, variants).filter(({ book }) => {
@@ -156,8 +156,12 @@ export default function BooksComp({
         return sign * compareDynasty(a.dynasty, b.dynasty) || compareText(a.title, b.title);
       });
     }
-    const key = (b: BookSummary) => (sortBy === "category" ? b.category : b.title);
-    return [...hits].sort((a, b) => sign * compareText(key(a.book), key(b.book)));
+    if (sortBy === "title" || sortBy === "category") {
+      const key = (b: BookSummary) => (sortBy === "category" ? b.category : b.title);
+      return [...hits].sort((a, b) => sign * compareText(key(a.book), key(b.book)) || compareText(a.book.id, b.book.id));
+    }
+    // ID order (the default without a query; also relevance once the query is cleared)
+    return [...hits].sort((a, b) => sign * compareText(a.book.id, b.book.id));
   }, [index, query, variants, category, dynasty, bookType, onlyAvailable, sortBy, sortOrder]);
 
   const slice = paginate(results.length, requestedPage);
@@ -292,6 +296,7 @@ export default function BooksComp({
                 onChange={(e) => updateParams({ sort: e.target.value })}
               >
                 {query && <option value="relevance">{UI.sortRelevance}</option>}
+                <option value="id">{UI.sortId}</option>
                 <option value="title">{UI.sortTitle}</option>
                 <option value="category">{UI.sortCategory}</option>
                 <option value="dynasty">{UI.sortDynasty}</option>
