@@ -4,13 +4,14 @@ import CategoryIndex from "@/components/category-index";
 import ExternalLink from "@/components/external-link";
 import PageHeader from "@/components/page-header";
 import StatList from "@/components/stat-list";
+import { LEGACY_SITE_BASE } from "@/lib/book-display";
 import { categoryGroups, collectionStats } from "@/lib/collection";
 
 export const metadata: Metadata = {
   title: "このサイトについて",
 };
 
-const ORIGINAL_SITE = "http://kanji.zinbun.kyoto-u.ac.jp/db-machine/toho/html/top.html";
+const ORIGINAL_SITE = `${LEGACY_SITE_BASE}top.html`;
 
 function AboutPage() {
   return (

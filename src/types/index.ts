@@ -82,8 +82,10 @@ export interface BookVolume {
   url: string;
   volumeNumber?: number;
   chapterNumber?: number;
+  /** First image of the volume (numbered within its prefix); may be 0. */
   startPage?: number;
   maxPage?: number;
+  /** Image prefix when it is not the book ID (the legacy site's `bookNum`). */
   bookNumber?: string;
   sequence?: number;
 }
@@ -114,9 +116,15 @@ export interface BookEntry {
   imageSize?: { width: number; height: number };
   /**
    * Images whose size differs from `imageSize` (e.g. covers), keyed by
-   * book-wide image number (from data/image-sizes/<id>.tsv).
+   * image number, or by image name (`D101B0003`) for a volume prefix other
+   * than the book ID (from data/image-sizes/<id>.tsv; see `imageKey`).
    */
-  imageSizes?: Record<number, { width: number; height: number }>;
+  imageSizes?: Record<string, { width: number; height: number }>;
+  /**
+   * File-name prefix of the book's own images when it differs from the
+   * folder (the book ID), e.g. folder W002 holds S0020001, D163 holds d1630001.
+   */
+  imageFilePrefix?: string;
   /** Markdown body of data/books/<id>.md (解題, notes), when present. */
   notes?: string;
   structure?: BookVolume[];

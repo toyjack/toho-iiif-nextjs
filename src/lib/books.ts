@@ -37,6 +37,8 @@ export interface BookSummary {
   isIncomplete: boolean;
   available: boolean;
   nuNumber?: string;
+  /** page on the legacy site, relative to its html/ directory */
+  url: string;
 }
 
 export function bookSummaries(): BookSummary[] {
@@ -58,5 +60,6 @@ export function bookSummaries(): BookSummary[] {
     isIncomplete: book.isIncomplete,
     available: book.available,
     nuNumber: book.nuNumber,
+    url: book.url,
   }));
 }

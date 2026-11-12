@@ -9,6 +9,7 @@ import { buildIndex, search, suggest, type Suggestion } from "@/lib/search/searc
 import { isPinyinQuery, type PinyinDict } from "@/lib/search/pinyin";
 import type { VariantMap } from "@/lib/search/variants";
 import { rememberListUrl } from "@/lib/last-list";
+import { compareDynasty } from "@/lib/dynasty";
 import { compareText } from "@/lib/text-compare";
 import { UI, countLabel, formatNumber, rangeLabel } from "@/lib/ui-text";
 import ActiveFilters, { type ActiveFilter } from "./active-filters";
@@ -124,7 +125,7 @@ export default function BooksComp({
       [...new Set(values.filter((v): v is string => Boolean(v)))];
     return {
       categories: unique(books.map((b) => b.category)), // keep data order (經史子集…)
-      dynasties: unique(books.map((b) => b.dynasty)).sort(),
+      dynasties: unique(books.map((b) => b.dynasty)).sort(compareDynasty),
       bookTypes: unique(books.map((b) => b.bookType)).sort(),
     };
   }, [books]);
@@ -145,13 +146,18 @@ export default function BooksComp({
     if (sortBy === "relevance" && query) {
       return sortOrder === "asc" ? hits : [...hits].reverse();
     }
-    const key = (b: BookSummary) =>
-      sortBy === "category" ? b.category : sortBy === "dynasty" ? b.dynasty ?? "" : b.title;
+    const sign = sortOrder === "asc" ? 1 : -1;
     // compareText, not localeCompare: the server and the browser must agree.
-    return [...hits].sort((a, b) => {
-      const c = compareText(key(a.book), key(b.book));
-      return sortOrder === "asc" ? c : -c;
-    });
+    if (sortBy === "dynasty") {
+      // chronological; books without a dynasty go last in either order,
+      // and books of one dynasty stay in title order
+      return [...hits].sort(({ book: a }, { book: b }) => {
+        if (!a.dynasty || !b.dynasty) return Number(!a.dynasty) - Number(!b.dynasty) || compareText(a.title, b.title);
+        return sign * compareDynasty(a.dynasty, b.dynasty) || compareText(a.title, b.title);
+      });
+    }
+    const key = (b: BookSummary) => (sortBy === "category" ? b.category : b.title);
+    return [...hits].sort((a, b) => sign * compareText(key(a.book), key(b.book)));
   }, [index, query, variants, category, dynasty, bookType, onlyAvailable, sortBy, sortOrder]);
 
   const slice = paginate(results.length, requestedPage);

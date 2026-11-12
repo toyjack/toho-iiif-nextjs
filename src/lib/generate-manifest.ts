@@ -36,24 +36,69 @@ export function volumePageRange(volume: BookVolume): [number, number] | null {
 }
 
 /**
- * Distinct image numbers of a book in ascending order.
- * Books without structure get a single placeholder image (1).
+ * One image on the image server: `<prefix>%2F<prefix>NNNN`.
+ *
+ * The prefix is the book's ID unless a volume names another one in
+ * `bookNumber` (the legacy site's `bookNum`), as for works whose 上下卷 were
+ * scanned under different IDs. Numbers count within a prefix and may start
+ * at 0 (the back of a map sheet).
  */
-export function getImageNumbers(book: BookEntry): number[] {
-  const numbers = new Set<number>();
-  for (const volume of book.structure ?? []) {
-    const range = volumePageRange(volume);
-    if (!range) continue;
-    for (let imageNo = range[0]; imageNo <= range[1]; imageNo++) {
-      numbers.add(imageNo);
-    }
-  }
-  if (numbers.size === 0) return [1];
-  return [...numbers].sort((a, b) => a - b);
+export interface ImageRef {
+  prefix: string;
+  imageNo: number;
 }
 
-export function imageServiceId(book: BookEntry, imageNo: number): string {
-  return `${IMAGE_SERVICE_BASE_URL}/${book.id}%2F${book.id}${String(imageNo).padStart(4, "0")}`;
+/** Image prefix of a volume. */
+export function volumePrefix(book: BookEntry, volume: BookVolume): string {
+  return volume.bookNumber ?? book.id;
+}
+
+/**
+ * Distinct images of a book in reading order: volumes by `sequence`, each
+ * volume's images ascending, an image shared with an earlier volume (a
+ * spread on a 卷 boundary) kept at its first place. For a book with one
+ * prefix this is ascending image order. Books without structure get a single
+ * placeholder image (1).
+ */
+export function getImages(book: BookEntry): ImageRef[] {
+  const seen = new Set<string>();
+  const images: ImageRef[] = [];
+  for (const volume of sortVolumes(book.structure ?? [])) {
+    const range = volumePageRange(volume);
+    if (!range) continue;
+    const prefix = volumePrefix(book, volume);
+    for (let imageNo = range[0]; imageNo <= range[1]; imageNo++) {
+      const key = imageKey(book, { prefix, imageNo });
+      if (seen.has(key)) continue;
+      seen.add(key);
+      images.push({ prefix, imageNo });
+    }
+  }
+  return images.length > 0 ? images : [{ prefix: book.id, imageNo: 1 }];
+}
+
+/** Image file name without the directory, e.g. `D101B0003`. */
+export function imageName({ prefix, imageNo }: ImageRef): string {
+  return `${prefix}${String(imageNo).padStart(4, "0")}`;
+}
+
+/**
+ * Key of an image within its book, as used in `imageSizes` and
+ * data/image-sizes/<id>.tsv: the number alone for the book's own prefix,
+ * the full image name (`D101B0003`) for another prefix.
+ */
+export function imageKey(book: BookEntry, image: ImageRef): string {
+  return image.prefix === book.id ? String(image.imageNo) : imageName(image);
+}
+
+/**
+ * Image service ID: `<base>/<prefix>%2F<file>`. Files of the book's own prefix
+ * are named with `book.imageFilePrefix` when it is set.
+ */
+export function imageServiceId(book: BookEntry, image: ImageRef): string {
+  const filePrefix = image.prefix === book.id ? book.imageFilePrefix : undefined;
+  const file = filePrefix ? imageName({ ...image, prefix: filePrefix }) : imageName(image);
+  return `${IMAGE_SERVICE_BASE_URL}/${image.prefix}%2F${file}`;
 }
 
 /**
@@ -64,12 +109,14 @@ export function imageServiceId(book: BookEntry, imageNo: number): string {
 export const DEFAULT_IMAGE_SIZE = { width: 4000, height: 3400 } as const;
 
 /** Canvas (and image) size of one image of a book. */
-export function canvasSize(book: BookEntry, imageNo: number): { width: number; height: number } {
-  return book.imageSizes?.[imageNo] ?? book.imageSize ?? DEFAULT_IMAGE_SIZE;
+export function canvasSize(book: BookEntry, image: ImageRef): { width: number; height: number } {
+  return book.imageSizes?.[imageKey(book, image)] ?? book.imageSize ?? DEFAULT_IMAGE_SIZE;
 }
 
-function canvasId(baseUrl: string, book: BookEntry, imageNo: number): string {
-  return `${baseUrl}/canvas/${book.id}/p${imageNo}`;
+/** `…/canvas/<book>/p<n>`, or `…/canvas/<book>/<prefix>/p<n>` for another prefix. */
+function canvasId(baseUrl: string, book: BookEntry, image: ImageRef): string {
+  const prefix = image.prefix === book.id ? "" : `${image.prefix}/`;
+  return `${baseUrl}/canvas/${book.id}/${prefix}p${image.imageNo}`;
 }
 
 
@@ -144,18 +191,18 @@ export class IIIFManifestGenerator {
     // Create one canvas per distinct image. Volumes become ranges, which may
     // share an image when a 卷 boundary falls inside one scanned spread.
     const volumes = sortVolumes(book.structure ?? []);
-    const imageNumbers = getImageNumbers(book);
-    const canvases: IIIFCanvas[] = imageNumbers.map((imageNo) =>
-      this.createCanvas(book, volumes, imageNo)
+    const canvases: IIIFCanvas[] = getImages(book).map((image) =>
+      this.createCanvas(book, volumes, image)
     );
 
     const structures: IIIFRange[] = volumes
       .filter((volume) => volumePageRange(volume))
       .map((volume) => {
         const [first, last] = volumePageRange(volume)!;
+        const prefix = volumePrefix(book, volume);
         const items: IIIFRange["items"] = [];
         for (let imageNo = first; imageNo <= last; imageNo++) {
-          items.push({ id: canvasId(this.baseUrl, book, imageNo), type: "Canvas" });
+          items.push({ id: canvasId(this.baseUrl, book, { prefix, imageNo }), type: "Canvas" });
         }
         return {
           id: `${this.baseUrl}/range/${book.id}/${volume.id}`,
@@ -209,21 +256,23 @@ export class IIIFManifestGenerator {
   private createCanvas(
     book: BookEntry,
     volumes: BookVolume[],
-    imageNo: number
+    image: ImageRef
   ): IIIFCanvas {
-    const id = canvasId(this.baseUrl, book, imageNo);
+    const id = canvasId(this.baseUrl, book, image);
+    const { imageNo } = image;
 
-    const { width, height } = canvasSize(book, imageNo);
+    const { width, height } = canvasSize(book, image);
 
     // A shared spread is labelled with every volume it belongs to.
     const labels = volumes.flatMap((volume) => {
       const range = volumePageRange(volume);
-      if (!range || imageNo < range[0] || imageNo > range[1]) return [];
+      if (!range || volumePrefix(book, volume) !== image.prefix) return [];
+      if (imageNo < range[0] || imageNo > range[1]) return [];
       return [`${volume.title} - 第${imageNo - range[0] + 1}頁`];
     });
     const pageLabel = labels.length > 0 ? labels.join("・") : `第${imageNo}頁`;
 
-    const serviceId = imageServiceId(book, imageNo);
+    const serviceId = imageServiceId(book, image);
 
     const annotation: IIIFAnnotation = {
       id: `${id}/annotation/1`,
