@@ -20,7 +20,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { BookEntry, LibraryData } from "../src/types";
-import { getImageNumbers, imageServiceId } from "../src/lib/generate-manifest";
+import { getImages, imageKey, imageServiceId, type ImageRef } from "../src/lib/generate-manifest";
 
 const PAUSE_MS = 700;
 const TOLERANCE = 0.01;
@@ -42,12 +42,13 @@ if (cachePath && existsSync(cachePath)) {
 }
 
 let consecutiveFailures = 0;
-async function infoSize(book: BookEntry, imageNo: number): Promise<Size | null> {
+async function infoSize(book: BookEntry, image: ImageRef): Promise<Size | null> {
+  const imageNo = imageKey(book, image);
   const key = `${book.id}\t${imageNo}`;
   const cached = cache.get(key);
   if (cached) return cached;
   try {
-    const response = await fetch(`${imageServiceId(book, imageNo)}/info.json`, {
+    const response = await fetch(`${imageServiceId(book, image)}/info.json`, {
       signal: AbortSignal.timeout(20_000),
     });
     if (!response.ok) {
@@ -104,7 +105,7 @@ function writeImageSize(id: string, size: Size) {
 }
 
 /** Write data/image-sizes/<id>.tsv, or remove it when there are none. */
-function writeExceptions(id: string, exceptions: [number, Size][]) {
+function writeExceptions(id: string, exceptions: [string, Size][]) {
   const path = join("data", "image-sizes", `${id}.tsv`);
   if (exceptions.length === 0) {
     if (existsSync(path)) rmSync(path);
@@ -122,12 +123,12 @@ const books = library.books.filter((b) =>
 
 const mismatched: string[] = [];
 for (const book of books) {
-  const numbers = getImageNumbers(book);
+  const numbers = getImages(book);
   const picks = [...new Set([0, 1, Math.floor(numbers.length / 2), numbers.length - 1])]
     .filter((i) => i < numbers.length)
     .map((i) => numbers[i]);
-  const results: [number, Size | null][] = [];
-  for (const imageNo of picks) results.push([imageNo, await infoSize(book, imageNo)]);
+  const results: [string, Size | null][] = [];
+  for (const image of picks) results.push([imageKey(book, image), await infoSize(book, image)]);
   const sizes = results.flatMap(([, size]) => (size ? [size] : []));
   const detail = results
     .map(([n, s]) => `${n}=${s ? `${s.width}x${s.height}` : "?"}`)
@@ -144,12 +145,12 @@ for (const book of books) {
   } else {
     // Read every image; the most common size becomes imageSize and the rest
     // are listed as exceptions.
-    const all: [number, Size][] = [];
-    const unread: number[] = [];
-    for (const imageNo of numbers) {
-      const size = await infoSize(book, imageNo);
-      if (size) all.push([imageNo, size]);
-      else unread.push(imageNo);
+    const all: [string, Size][] = [];
+    const unread: string[] = [];
+    for (const image of numbers) {
+      const size = await infoSize(book, image);
+      if (size) all.push([imageKey(book, image), size]);
+      else unread.push(imageKey(book, image));
     }
     if (unread.length > 0) {
       mismatched.push(`${book.id}: info.json could not be read for image(s) ${unread.join(", ")}`);

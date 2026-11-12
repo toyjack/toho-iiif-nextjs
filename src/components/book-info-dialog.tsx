@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { kansekiDbUrl } from "@/lib/book-display";
+import { kansekiDbUrl, legacySiteUrl } from "@/lib/book-display";
 import { UI } from "@/lib/ui-text";
 import Dialog from "./dialog";
 import ExternalLink from "./external-link";
@@ -18,6 +18,8 @@ export interface BookInfo {
   collectionInfo: string;
   category: string;
   nuNumber?: string;
+  /** page on the legacy site, as in the book's `url` field */
+  legacyUrl: string;
   /** site-relative manifest path */
   manifestPath: string;
 }
@@ -72,11 +74,10 @@ export default function BookInfoDialog({ info }: { info: BookInfo }) {
                 </div>
               ))}
           </dl>
-          {info.nuNumber && (
-            <p className="text-sm">
-              <ExternalLink href={kansekiDbUrl(info.nuNumber)}>{UI.kansekiDb}</ExternalLink>
-            </p>
-          )}
+          <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {info.nuNumber && <ExternalLink href={kansekiDbUrl(info.nuNumber)}>{UI.kansekiDb}</ExternalLink>}
+            <ExternalLink href={legacySiteUrl(info.legacyUrl)}>{UI.legacySite}</ExternalLink>
+          </p>
           <div className="flex flex-col gap-1.5 border-t border-base-300 pt-4">
             <p className="text-xs font-bold text-muted">{UI.manifest}</p>
             <div className="flex items-center gap-2">

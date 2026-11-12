@@ -3,7 +3,7 @@ import { library } from "@/lib/books";
 import { BookEntry, BookVolume, IIIFManifest } from "@/types";
 import {
   DEFAULT_IMAGE_SIZE,
-  getImageNumbers,
+  getImages,
   IIIFManifestGenerator,
   sortVolumes,
   volumePageRange,
@@ -77,11 +77,76 @@ describe("page mapping", () => {
 
   test("volumes without a page count contribute no images", () => {
     expect(volumePageRange(volume(1, 5, undefined))).toBeNull();
-    expect(getImageNumbers(book([volume(1, 5, undefined)]))).toEqual([1]);
+    expect(getImages(book([volume(1, 5, undefined)]))).toEqual([{ prefix: "T001", imageNo: 1 }]);
   });
 
   test("book without structure gets a single placeholder canvas", () => {
     expect(generator.generateManifest(book([])).items).toHaveLength(1);
+  });
+});
+
+describe("volume image prefixes (bookNumber)", () => {
+  const serviceIds = (manifest: IIIFManifest) =>
+    manifest.items.map((c) => c.items[0].items[0].body.service![0].id.split("/").pop());
+
+  // 上卷 under the book's own prefix, 下卷 under another, both numbered from 1
+  const twoPrefixes = book([volume(1, 1, 2), { ...volume(2, 1, 2), bookNumber: "T001B" }]);
+
+  test("each volume's images use its own prefix, in reading order", () => {
+    expect(serviceIds(generator.generateManifest(twoPrefixes))).toEqual([
+      "T001%2FT0010001",
+      "T001%2FT0010002",
+      "T001B%2FT001B0001",
+      "T001B%2FT001B0002",
+    ]);
+  });
+
+  test("canvas IDs stay distinct and ranges point at their own prefix", () => {
+    const manifest = generator.generateManifest(twoPrefixes);
+    const ids = manifest.items.map((c) => c.id);
+    expect(new Set(ids).size).toBe(4);
+    expect(ids[0]).toBe("https://example.test/canvas/T001/p1");
+    expect(ids[2]).toBe("https://example.test/canvas/T001/T001B/p1");
+    expect(manifest.structures![1].items.map((i) => i.id)).toEqual(ids.slice(2));
+    expect(manifest.items[2].label.zh[0]).toBe("卷2 - 第1頁");
+  });
+
+  test("image 0 is allowed and volume order decides the canvas order", () => {
+    // front of a map sheet (0001) then its back (0000)
+    const map = book([volume(1, 1, 1), volume(2, 0, 1)]);
+    expect(getImages(map).map((i) => i.imageNo)).toEqual([1, 0]);
+    expect(serviceIds(generator.generateManifest(map))[1]).toBe("T001%2FT0010000");
+  });
+
+  test("size exceptions of another prefix are keyed by image name", () => {
+    const b = {
+      ...twoPrefixes,
+      imageSize: { width: 4000, height: 3000 },
+      imageSizes: { "1": { width: 2000, height: 3000 }, T001B0002: { width: 1000, height: 3000 } },
+    };
+    expect(generator.generateManifest(b).items.map((c) => c.width)).toEqual([2000, 4000, 4000, 1000]);
+  });
+});
+
+describe("image file prefix (imageFilePrefix)", () => {
+  const base = "https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif";
+  const body = (manifest: IIIFManifest, i: number) => manifest.items[i].items[0].items[0].body;
+
+  test("files are named after the book id by default", () => {
+    expect(body(generator.generateManifest(book([volume(1, 1, 1)])), 0).service![0].id).toBe(`${base}/T001%2FT0010001`);
+  });
+
+  test("imageFilePrefix renames the book's own files, in the book's folder", () => {
+    const b = {
+      ...book([volume(1, 1, 1), { ...volume(2, 1, 1), bookNumber: "T001B" }]),
+      imageFilePrefix: "s001",
+    };
+    const manifest = generator.generateManifest(b);
+    expect(body(manifest, 0).service![0].id).toBe(`${base}/T001%2Fs0010001`);
+    expect(body(manifest, 0).id).toBe(`${base}/T001%2Fs0010001/full/max/0/default.jpg`);
+    // another volume prefix keeps its own file names; canvas IDs are unchanged
+    expect(body(manifest, 1).service![0].id).toBe(`${base}/T001B%2FT001B0001`);
+    expect(manifest.items[0].id).toBe("https://example.test/canvas/T001/p1");
   });
 });
 
@@ -143,7 +208,7 @@ describe("real data", () => {
 
   test("A046 ends at image 139 (checked against the image server)", () => {
     const a046 = library.books.find((b) => b.id === "A046")!;
-    expect(getImageNumbers(a046).at(-1)).toBe(139);
+    expect(getImages(a046).at(-1)).toEqual({ prefix: "A046", imageNo: 139 });
   });
 
   test("B004 ranges follow sequence order", () => {

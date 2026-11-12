@@ -20,6 +20,14 @@ export function kansekiDbUrl(nuNumber: string): string {
   return `http://kanji.zinbun.kyoto-u.ac.jp/kanseki?record=data/FA019705/tagged/${nuNumber}.dat&back=1`;
 }
 
+/** Directory of the legacy site (東方學デジタル圖書館); book `url` fields are relative to it. */
+export const LEGACY_SITE_BASE = "http://kanji.zinbun.kyoto-u.ac.jp/db-machine/toho/html/";
+
+/** A book's page on the legacy site, from its `url` field (e.g. `A015menu.html`). */
+export function legacySiteUrl(url: string): string {
+  return new URL(url, LEGACY_SITE_BASE).href;
+}
+
 export function viewerHref(id: string): string {
   return `/viewer?book=${encodeURIComponent(id)}`;
 }

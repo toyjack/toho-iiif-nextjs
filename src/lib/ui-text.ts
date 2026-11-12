@@ -42,6 +42,7 @@ export const UI = {
   viaVariant: "異体字で一致",
   viaPinyin: "拼音で一致",
   kansekiDb: "全国漢籍DB",
+  legacySite: "旧サイト",
   newTab: "（新しいタブで開く）",
   close: "閉じる",
   prev: "前へ",

@@ -4,7 +4,7 @@
 import Link from "next/link";
 import type { BookSummary } from "@/lib/books";
 import { bookTypeLabel } from "@/lib/book-type";
-import { kansekiDbUrl, splitTitle, viewerHref } from "@/lib/book-display";
+import { kansekiDbUrl, legacySiteUrl, splitTitle, viewerHref } from "@/lib/book-display";
 import { UI } from "@/lib/ui-text";
 import ExternalLink from "./external-link";
 
@@ -24,6 +24,7 @@ export type RowBook = Pick<
   | "isIncomplete"
   | "available"
   | "nuNumber"
+  | "url"
 >;
 
 export interface BookRowData {
@@ -86,11 +87,21 @@ function ReadAction({ book }: { book: RowBook }) {
   );
 }
 
+const outLink = "link-text text-[0.8125rem] whitespace-nowrap";
+
 function KansekiLink({ book }: { book: RowBook }) {
   if (!book.nuNumber) return null;
   return (
-    <ExternalLink href={kansekiDbUrl(book.nuNumber)} className="link-text text-[0.8125rem] whitespace-nowrap">
+    <ExternalLink href={kansekiDbUrl(book.nuNumber)} className={outLink}>
       {UI.kansekiDb}
+    </ExternalLink>
+  );
+}
+
+function LegacyLink({ book }: { book: RowBook }) {
+  return (
+    <ExternalLink href={legacySiteUrl(book.url)} className={outLink}>
+      {UI.legacySite}
     </ExternalLink>
   );
 }
@@ -124,6 +135,8 @@ export function BookTableRow({ book, viaVariant, viaPinyin }: BookRowData) {
                 <KansekiLink book={book} />
               </>
             )}
+            {" · "}
+            <LegacyLink book={book} />
             {volumes && <> · {volumes}</>}
             {book.publicationInfo && <> · {book.publicationInfo}</>}
             <MatchNote viaVariant={viaVariant} viaPinyin={viaPinyin} />
@@ -164,6 +177,7 @@ function BookStacked({ book, viaVariant, viaPinyin }: BookRowData) {
         </span>
         <BookFlags book={book} />
         <KansekiLink book={book} />
+        <LegacyLink book={book} />
         <span className="ml-auto">
           <ReadAction book={book} />
         </span>
@@ -183,7 +197,7 @@ export function BookListItem(props: BookRowData) {
 
 /**
  * Card (§4.3): same content as a row, 1px border, no shadow or hover lift.
- * Not a whole-card link, because it holds a second link (全国漢籍DB).
+ * Not a whole-card link, because it holds other links (全国漢籍DB, 旧サイト).
  */
 export function BookCard({ book }: { book: RowBook }) {
   return (

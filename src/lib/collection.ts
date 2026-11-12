@@ -4,7 +4,7 @@
  * Server-only: reads the catalogue.
  */
 import { availableBooks, library } from "@/lib/books";
-import { getImageNumbers } from "@/lib/generate-manifest";
+import { getImages } from "@/lib/generate-manifest";
 import { groupCategories, type CategoryGroupData } from "@/lib/category-groups";
 import { UI } from "@/lib/ui-text";
 
@@ -18,7 +18,7 @@ export function collectionStats(): CollectionStat[] {
   const viewable = availableBooks();
   const images = viewable
     .filter((book) => (book.structure?.length ?? 0) > 0)
-    .reduce((acc, book) => acc + getImageNumbers(book).length, 0);
+    .reduce((acc, book) => acc + getImages(book).length, 0);
   return [
     { label: "収録", value: library.metadata.totalBooks, unit: "部" },
     { label: `うち${UI.available}`, value: viewable.length, unit: "部" },

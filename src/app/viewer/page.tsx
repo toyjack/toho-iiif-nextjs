@@ -6,7 +6,7 @@ import Notice from "@/components/notice";
 import ViewerToolbar from "@/components/viewer-toolbar";
 import { bookTypeLabel } from "@/lib/book-type";
 import { getBook } from "@/lib/books";
-import { getImageNumbers } from "@/lib/generate-manifest";
+import { getImages } from "@/lib/generate-manifest";
 import { firstParam as first, parsePage } from "@/lib/viewer-params";
 
 type SearchParams = Promise<{
@@ -75,7 +75,7 @@ async function ViewerIndexPage({
     );
   }
 
-  const page = parsePage(first(params.page), getImageNumbers(book).length);
+  const page = parsePage(first(params.page), getImages(book).length);
   const manifestUrl = `/manifest/${encodeURIComponent(book.id)}/manifest.json`;
 
   return (
@@ -93,6 +93,7 @@ async function ViewerIndexPage({
           collectionInfo: book.collectionInfo,
           category: book.category,
           nuNumber: book.nuNumber,
+          legacyUrl: book.url,
           manifestPath: manifestUrl,
         }}
       />

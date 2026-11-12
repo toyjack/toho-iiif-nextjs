@@ -10,6 +10,9 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { z } from "zod";
+import { isKnownDynasty } from "../src/lib/dynasty";
+import { getImages, imageKey } from "../src/lib/generate-manifest";
+import type { BookEntry } from "../src/types";
 import { parseVariantTable } from "../src/lib/search/variants";
 import { buildPinyinDict } from "./pinyin";
 
@@ -31,9 +34,11 @@ const volumeSchema = z.strictObject({
   url: z.string(),
   volumeNumber: z.number().int().optional(),
   chapterNumber: z.number().int().optional(),
-  startPage: positiveInt,
+  // numbered within the volume's image prefix; 0 is the back of a map sheet (B109)
+  startPage: z.number().int().nonnegative(),
   maxPage: positiveInt,
-  bookNumber: z.string().optional(),
+  // image prefix when it differs from the book id (the legacy site's bookNum)
+  bookNumber: z.string().regex(/^[A-Za-z0-9]+$/).optional(),
   sequence: z.number().int(),
 });
 
@@ -54,6 +59,8 @@ const bookSchema = z.strictObject({
   available: z.boolean(),
   nuNumber: z.string().regex(/^\d{7}$/).optional(),
   imageSize: z.strictObject({ width: positiveInt, height: positiveInt }).optional(),
+  // file-name prefix of the book's own images when it differs from the id (W002 → S002)
+  imageFilePrefix: z.string().regex(/^[A-Za-z0-9]+$/).optional(),
   structure: z.array(volumeSchema),
 });
 
@@ -87,25 +94,29 @@ function splitFrontmatter(text: string, file: string) {
 
 /**
  * data/image-sizes/<id>.tsv: sizes of the images that differ from the book's
- * `imageSize` (typically covers). Columns: image, width, height.
+ * `imageSize` (typically covers). Columns: image, width, height. The image is
+ * its number, or its full name (`D101B0003`) for a volume prefix other than
+ * the book id (see `imageKey`).
  */
-function readImageSizes(id: string, images: Set<number>): Record<number, { width: number; height: number }> | undefined {
+function readImageSizes(id: string, images: Set<string>): Record<string, { width: number; height: number }> | undefined {
   const path = join(imageSizesDir, `${id}.tsv`);
   if (!existsSync(path)) return undefined;
   const file = `data/image-sizes/${id}.tsv`;
-  const sizes: Record<number, { width: number; height: number }> = {};
+  const sizes: Record<string, { width: number; height: number }> = {};
   const lines = readFileSync(path, "utf8").replace(/^﻿/, "").split(/\r?\n/);
   lines.forEach((line, i) => {
     if (i === 0 || line === "" || line.startsWith("#")) {
       if (i === 0 && line.trim() !== "image\twidth\theight") errors.push(`${file}: header must be image<TAB>width<TAB>height`);
       return;
     }
-    const cells = line.split("\t").map(Number);
-    if (cells.length !== 3 || !cells.every((n) => Number.isInteger(n) && n > 0)) {
-      errors.push(`${file}:${i + 1}: expected three positive integers`);
+    const [image, ...rest] = line.split("\t");
+    const dims = rest.map(Number);
+    if (!/^(\d+|[A-Za-z0-9]+\d{4})$/.test(image) || dims.length !== 2 || !dims.every((n) => Number.isInteger(n) && n > 0)) {
+      errors.push(`${file}:${i + 1}: expected an image number or name and two positive integers`);
       return;
     }
-    const [imageNo, width, height] = cells;
+    const imageNo = /^\d+$/.test(image) ? String(Number(image)) : image;
+    const [width, height] = dims;
     if (!images.has(imageNo)) errors.push(`${file}:${i + 1}: image ${imageNo} is not in the book's structure`);
     if (sizes[imageNo]) errors.push(`${file}:${i + 1}: duplicate image ${imageNo}`);
     sizes[imageNo] = { width, height };
@@ -130,7 +141,7 @@ const site = siteResult.data;
 // --- books ---
 const books: Array<
   z.infer<typeof bookSchema> & {
-    imageSizes?: Record<number, { width: number; height: number }>;
+    imageSizes?: Record<string, { width: number; height: number }>;
     notes?: string;
     totalVolumes: number;
   }
@@ -157,35 +168,52 @@ for (const name of readdirSync(booksDir).filter((f) => f.endsWith(".md")).sort()
 
   const volumeIds = new Set<string>();
   for (const volume of book.structure) {
-    if (!volume.id.startsWith(book.id)) errors.push(`${file}: volume ${volume.id} does not start with book id`);
+    if (volume.bookNumber === book.id) errors.push(`${file}: volume ${volume.id}: bookNumber equals the book id; omit it`);
+    // legacy volume ids are named after their images, e.g. D101B0001 in book D101A
+    if (!volume.id.startsWith(volume.bookNumber ?? book.id)) {
+      errors.push(`${file}: volume ${volume.id} does not start with its image prefix ${volume.bookNumber ?? book.id}`);
+    }
     if (volumeIds.has(volume.id)) errors.push(`${file}: duplicate volume id ${volume.id}`);
     volumeIds.add(volume.id);
   }
 
   const structure = [...book.structure].sort((a, b) => a.sequence - b.sequence);
-  for (let i = 1; i < structure.length; i++) {
-    const prev = structure[i - 1];
+  // Pages continue only within one image prefix, so each volume is checked
+  // against the previous volume with the same prefix.
+  const lastOfPrefix = new Map<string, (typeof structure)[number]>();
+  for (let i = 0; i < structure.length; i++) {
     const cur = structure[i];
-    if (cur.sequence === prev.sequence) errors.push(`${file}: duplicate sequence ${cur.sequence}`);
+    const prefix = cur.bookNumber ?? book.id;
+    const prevOfPrefix = lastOfPrefix.get(prefix);
+    // image 0 (the back of a map sheet) is outside the page run
+    if (cur.startPage > 0) lastOfPrefix.set(prefix, cur);
+    if (i > 0) {
+      const prev = structure[i - 1];
+      if (cur.sequence === prev.sequence) errors.push(`${file}: duplicate sequence ${cur.sequence}`);
+      if (cur.sequence !== prev.sequence + 1) {
+        warnings.push(`${book.id}: sequence jumps from ${prev.sequence} to ${cur.sequence}`);
+      }
+    }
+    if (!prevOfPrefix || cur.startPage === 0) continue;
     // Overlap of exactly one image is a spread shared by two 卷 and is expected.
-    const diff = cur.startPage - (prev.startPage + prev.maxPage);
+    const diff = cur.startPage - (prevOfPrefix.startPage + prevOfPrefix.maxPage);
     if (diff !== 0 && diff !== -1) {
       warnings.push(
-        `${book.id}: ${prev.id} ends at ${prev.startPage + prev.maxPage - 1}, ${cur.id} starts at ${cur.startPage} (${diff > 0 ? `gap ${diff}` : `overlap ${-diff}`})`
+        `${book.id}: ${prevOfPrefix.id} ends at ${prevOfPrefix.startPage + prevOfPrefix.maxPage - 1}, ${cur.id} starts at ${cur.startPage} (${diff > 0 ? `gap ${diff}` : `overlap ${-diff}`})`
       );
-    }
-    if (cur.sequence !== prev.sequence + 1) {
-      warnings.push(`${book.id}: sequence jumps from ${prev.sequence} to ${cur.sequence}`);
     }
   }
   if (book.available && structure.length === 0) {
     warnings.push(`${book.id}: available but has no structure (single placeholder page)`);
   }
+  if (book.dynasty && !isKnownDynasty(book.dynasty)) {
+    warnings.push(`${book.id}: dynasty ${book.dynasty} is not in src/lib/dynasty.ts (sorted after the known ones)`);
+  }
   if (book.available && !book.imageSize) {
     warnings.push(`${book.id}: available but has no imageSize (canvases use a default size)`);
   }
-  const images = new Set<number>();
-  for (const v of structure) for (let n = v.startPage; n < v.startPage + v.maxPage; n++) images.add(n);
+  const entry = { ...book, structure } as BookEntry;
+  const images = new Set(structure.length > 0 ? getImages(entry).map((image) => imageKey(entry, image)) : []);
   const imageSizes = readImageSizes(book.id, images);
   if (imageSizes && !book.imageSize) {
     errors.push(`${file}: data/image-sizes/${book.id}.tsv exists but imageSize is not set`);

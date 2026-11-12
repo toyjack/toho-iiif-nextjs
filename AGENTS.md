@@ -14,7 +14,7 @@
 - `data/books/<id>.md`：每部书一个文件。YAML frontmatter 存书目字段（含 `available` 是否可阅读、`nuNumber` 全国漢籍DB 编号、`imageSize` 扫描图像像素尺寸、`structure` 卷册），正文可写解题与修订依据。
 - 图像尺寸来自图像服务的 `info.json`，用作 manifest 中 canvas 与图像的宽高：
   - `imageSize`（frontmatter）是该书多数图像的尺寸。大多数书全书一致（相差一两个像素）。
-  - 封面、旋转图像等相差超过 1% 的图像，列在 `data/image-sizes/<id>.tsv`（`image<TAB>width<TAB>height`，有表头），由 `build-data` 校验。目前有 34 部书有这类例外。
+  - 封面、旋转图像等相差超过 1% 的图像，列在 `data/image-sizes/<id>.tsv`（`image<TAB>width<TAB>height`，有表头；`image` 为图像编号，卷册另有前缀时写完整图像名如 `D101B0003`），由 `build-data` 校验。目前有 56 部书有这类例外。
   - 缺少 `imageSize` 时使用 `DEFAULT_IMAGE_SIZE`（横向），构建时给出警告。
 - 新增或修改可阅读书目后，运行 `bun scripts/fetch-image-sizes.ts [ID ...]`：
   - 默认抽查首、次、中、末 4 张图像，尺寸一致才写入；不一致的列出供核对。
@@ -62,9 +62,9 @@
 - 保留书目原文、旧字形、ID、卷册结构和外部链接。数据修订应有来源依据，避免推测性改写或批量规范化；修订记录写在书目文件正文的「数据修订」一节。
 - 卷册结构的原始来源是旧站 `http://kanji.zinbun.kyoto-u.ac.jp/db-machine/toho/html/` 下的目录页（书目 `url` 字段，相对该目录；部分书有二级目录 `…menuNN.html`）。各卷页面脚本中的 `volStartPos`、`volMaxPage` 对应 `startPage`、`maxPage`，链接文字对应卷题；卷轴（`../volumen/*.html`）按页面中图像列表计算。旧站个别数据有误（如 B010 第十二册），以实际图像为准。核对时逐个请求并间隔等待。
 - 修改 IIIF 时核对资源 ID、语言映射、`right-to-left`、归属与权利声明、图像服务 URL 编码、页数及卷册顺序；本地接口类型不能替代实际阅读器验证。
-- 外部图像服务为 `https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif`，实际图像加载依赖该服务。
+- 外部图像服务为 `https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif`，实际图像加载依赖该服务。图像 ID 为 `<基址>/<前缀>%2F<文件名>`；文件名前缀与书目 ID 不同时（W002 的 `S002NNNN`、D163 的 `d163NNNN`），在 frontmatter 写 `imageFilePrefix`，只作用于书目自身前缀的图像。
 - manifest、canvas、range 的 ID 基址在请求时由 `src/lib/site-url.ts` 决定：优先使用运行时环境变量 `SITE_URL`（完整 origin 或裸 host），未设置时使用请求的 `X-Forwarded-Host`/`Host` 与 `X-Forwarded-Proto`。生产部署应设置 `SITE_URL`；加入共享缓存前必须设置，避免伪造请求头污染缓存。
-- 图像按全书连续编号：卷的图像范围为 `[startPage, startPage + maxPage - 1]`，以 `startPage` 为准。按「卷」划分的书在卷界处可能共用一张对开页；manifest 中每张图像只生成一个 canvas，卷册以 `structures`（Range）表达且允许重叠。修改分页逻辑或卷册数据时需对照实际图像核对。
+- 图像按全书连续编号：卷的图像范围为 `[startPage, startPage + maxPage - 1]`，以 `startPage` 为准。图像前缀默认是书目 ID；卷的图像在其他前缀下时（如寶卷上下卷 D101A、D101B，旧站卷页面的 `bookNum`），在该卷写 `bookNumber`，编号在各前缀内计。canvas 按卷册阅读顺序排列，其他前缀的 canvas ID 为 `…/canvas/<书>/<前缀>/p<n>`。`startPage: 0` 只用于地图背面（B109 子目的 `…0000`）。按「卷」划分的书在卷界处可能共用一张对开页；manifest 中每张图像只生成一个 canvas，卷册以 `structures`（Range）表达且允许重叠。修改分页逻辑或卷册数据时需对照实际图像核对。
 
 ## Claude Code 与 Codex 协作
 

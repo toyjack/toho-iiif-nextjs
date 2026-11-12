@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { kansekiDbUrl, splitTitle, viewerHref } from "./book-display";
+import { kansekiDbUrl, legacySiteUrl, splitTitle, viewerHref } from "./book-display";
 
 test("splitTitle splits at the first ideographic space and loses nothing", () => {
   for (const title of ["周易正義　十四卷", "𧻰日曆書　不分卷　目錄　一卷", "郋園小學四種", "　頭", ""]) {
@@ -18,4 +18,8 @@ test("link builders", () => {
     "http://kanji.zinbun.kyoto-u.ac.jp/kanseki?record=data/FA019705/tagged/0012345.dat&back=1"
   );
   expect(viewerHref("A029")).toBe("/viewer?book=A029");
+  expect(legacySiteUrl("A015menu.html")).toBe("http://kanji.zinbun.kyoto-u.ac.jp/db-machine/toho/html/A015menu.html");
+  expect(legacySiteUrl("../ShiSanJingZhuShu/html/A014menu.html")).toBe(
+    "http://kanji.zinbun.kyoto-u.ac.jp/db-machine/toho/ShiSanJingZhuShu/html/A014menu.html"
+  );
 });
