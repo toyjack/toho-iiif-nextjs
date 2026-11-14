@@ -1,5 +1,5 @@
 import { bookTypeLabel } from "@/lib/book-type";
-import { BookEntry, BookVolume, IIIFAnnotation, IIIFAnnotationPage, IIIFCanvas, IIIFManifest, IIIFRange, LibraryData } from "@/types";
+import { BookEntry, BookVolume, IIIFAnnotation, IIIFBehavior, IIIFAnnotationPage, IIIFCanvas, IIIFManifest, IIIFRange, LibraryData } from "@/types";
 
 const IMAGE_SERVICE_BASE_URL: string = "https://image.kanji.zinbun.kyoto-u.ac.jp/toho/iiif";
 
@@ -33,6 +33,23 @@ export function volumePageRange(volume: BookVolume): [number, number] | null {
   const count = volume.maxPage ?? 0;
   if (count < 1) return null;
   return [start, start + count - 1];
+}
+
+/**
+ * Manifest-level `behavior` of a book.
+ *
+ * A 卷子本 (`behavior: continuous`) with one scroll is continuous as a whole.
+ * With several scrolls each volume's Range is continuous instead, and the
+ * manifest is `individuals` so viewers do not stitch one scroll onto the next
+ * (Tify also turns off its two-page view for either value).
+ * Other books get no behavior.
+ */
+export function manifestBehavior(
+  book: BookEntry,
+  rangeCount: number
+): IIIFBehavior[] | undefined {
+  if (book.behavior !== "continuous") return undefined;
+  return rangeCount > 1 ? ["individuals"] : ["continuous"];
 }
 
 /**
@@ -208,9 +225,12 @@ export class IIIFManifestGenerator {
           id: `${this.baseUrl}/range/${book.id}/${volume.id}`,
           type: "Range",
           label: { zh: [volume.title] },
+          ...(book.behavior === "continuous" ? { behavior: ["continuous"] as IIIFBehavior[] } : {}),
           items,
         };
       });
+
+    const behavior = manifestBehavior(book, structures.length);
 
     const manifest: IIIFManifest = {
       "@context": [
@@ -223,6 +243,7 @@ export class IIIFManifestGenerator {
       metadata,
       ...(book.publicationInfo ? { summary: { zh: [book.publicationInfo] } } : {}),
       viewingDirection: "right-to-left",
+      ...(behavior ? { behavior } : {}),
       requiredStatement: {
         label: { en: ["Attribution"], zh: ["歸屬"] },
         value: SITE_NAME,

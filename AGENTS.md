@@ -14,6 +14,7 @@
 - 首页（`/`）按请求渲染，每次访问随机展示 6 部可阅读的书（`src/lib/random.ts`）。首页检索框是提交到 `/books?q=` 的普通 GET 表单，不加载检索数据。
 - `src/lib/generate-manifest.ts`：`IIIFManifestGenerator`，负责 manifest、canvas 与图像 annotation 的生成。
 - `data/books/<id>.md`：每部书一个文件。YAML frontmatter 存书目字段（含 `available` 是否可阅读、`nuNumber` 全国漢籍DB 编号、`imageSize` 扫描图像像素尺寸、`structure` 卷册），正文可写解题与修订依据。
+- 卷子本（横向卷轴）在 frontmatter 写 `behavior: continuous`（需有依据，如旧站 `../volumen/` 卷轴页面）。manifest 中每卷的 Range 带 `behavior: ["continuous"]`；manifest 本身单卷为 `continuous`，多卷为 `individuals`，避免把不同卷拼在一起。Tify 读到这两个值只会关闭双页显示，不会拼接图像。
 - 图像尺寸来自图像服务的 `info.json`，用作 manifest 中 canvas 与图像的宽高：
   - `imageSize`（frontmatter）是该书多数图像的尺寸。大多数书全书一致（相差一两个像素）。
   - 封面、旋转图像等相差超过 1% 的图像，列在 `data/image-sizes/<id>.tsv`（`image<TAB>width<TAB>height`，有表头；`image` 为图像编号，卷册另有前缀时写完整图像名如 `D101B0003`），由 `build-data` 校验。目前有 56 部书有这类例外。

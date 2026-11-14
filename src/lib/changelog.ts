@@ -11,6 +11,12 @@ export interface ChangelogEntry {
 
 export const FEATURE_CHANGES: ChangelogEntry[] = [
   {
+    date: "2026-11-14",
+    items: [
+      "巻子本のマニフェストに IIIF の behavior（continuous）を付け、対応するビューアで巻ごとに画像をつなげて表示できるようにしました。",
+    ],
+  },
+  {
     date: "2026-11-12",
     items: [
       "冊・巻ごとに別の画像番号系列を持つ漢籍（寶卷の上下巻、地図の表裏など）に対応しました。",

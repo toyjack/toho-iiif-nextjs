@@ -61,6 +61,8 @@ const bookSchema = z.strictObject({
   imageSize: z.strictObject({ width: positiveInt, height: positiveInt }).optional(),
   // file-name prefix of the book's own images when it differs from the id (W002 → S002)
   imageFilePrefix: z.string().regex(/^[A-Za-z0-9]+$/).optional(),
+  // 卷子本: each volume is one continuous scroll (IIIF behavior "continuous")
+  behavior: z.literal("continuous").optional(),
   structure: z.array(volumeSchema),
 });
 

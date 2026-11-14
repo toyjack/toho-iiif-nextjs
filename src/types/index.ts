@@ -14,6 +14,7 @@ export interface IIIFManifest {
   }>;
   summary?: { [lang: string]: string[] };
   viewingDirection?: "left-to-right" | "right-to-left";
+  behavior?: IIIFBehavior[];
   requiredStatement?: {
     label: { [lang: string]: string[] };
     value: { [lang: string]: string[] };
@@ -34,10 +35,13 @@ export interface IIIFManifest {
   structures?: IIIFRange[];
 }
 
+export type IIIFBehavior = "continuous" | "individuals";
+
 export interface IIIFRange {
   id: string;
   type: "Range";
   label: { [lang: string]: string[] };
+  behavior?: IIIFBehavior[];
   items: Array<{ id: string; type: "Canvas" }>;
 }
 
@@ -125,6 +129,11 @@ export interface BookEntry {
    * folder (the book ID), e.g. folder W002 holds S0020001, D163 holds d1630001.
    */
   imageFilePrefix?: string;
+  /**
+   * `continuous` for a 卷子本: each volume is one horizontal scroll whose
+   * images are consecutive sections, so viewers may stitch them together.
+   */
+  behavior?: "continuous";
   /** Markdown body of data/books/<id>.md (解題, notes), when present. */
   notes?: string;
   structure?: BookVolume[];

@@ -197,7 +197,38 @@ describe("canvas size", () => {
   });
 });
 
+describe("scrolls (behavior: continuous)", () => {
+  const scroll = (structure: BookVolume[]): BookEntry => ({
+    ...book(structure),
+    behavior: "continuous",
+  });
+
+  test("each scroll's range is continuous; several scrolls are individuals", () => {
+    const manifest = generator.generateManifest(scroll([volume(1, 1, 3), volume(2, 4, 2)]));
+    expect(manifest.behavior).toEqual(["individuals"]);
+    expect(manifest.structures!.map((r) => r.behavior)).toEqual([["continuous"], ["continuous"]]);
+  });
+
+  test("a single scroll is continuous as a whole", () => {
+    const manifest = generator.generateManifest(scroll([volume(1, 1, 5)]));
+    expect(manifest.behavior).toEqual(["continuous"]);
+    expect(manifest.structures![0].behavior).toEqual(["continuous"]);
+  });
+
+  test("other books get no behavior", () => {
+    const manifest = generator.generateManifest(book([volume(1, 1, 3), volume(2, 4, 2)]));
+    expect(manifest.behavior).toBeUndefined();
+    expect(manifest.structures!.every((r) => r.behavior === undefined)).toBe(true);
+  });
+});
+
 describe("real data", () => {
+  test("D005 is two continuous scrolls", () => {
+    const manifest = generator.getManifest("D005")!;
+    expect(manifest.behavior).toEqual(["individuals"]);
+    expect(manifest.structures!.map((r) => r.behavior)).toEqual([["continuous"], ["continuous"]]);
+  });
+
   test("A029 second volume starts at image 84 and the book ends at 341", () => {
     const manifest = generator.getManifest("A029")!;
     const numbers = serviceNumbers(manifest);
