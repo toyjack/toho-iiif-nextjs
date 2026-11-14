@@ -25,6 +25,20 @@ interface MiradorGlobal {
 const MIRADOR_SRC = "/vendor/mirador/mirador.min.js";
 
 /**
+ * Mirador's views with the scroll view always available. By default it is
+ * offered only when the manifest itself is `continuous`, but a 卷子本 with
+ * several 卷 has an `individuals` manifest (its 卷 are `continuous` Ranges,
+ * which Mirador ignores), so for 卷子本 the scroll view is opened directly.
+ * It shows every canvas in one strip, so the 卷 run on into each other.
+ */
+const SCROLL_VIEWS = [
+  { key: "single", behaviors: ["individuals"] },
+  { key: "book", behaviors: ["paged"] },
+  { key: "scroll" },
+  { key: "gallery" },
+];
+
+/**
  * Open the manifest at `startPage`, then keep `?page=` in step with the
  * window's canvas.
  *
@@ -62,7 +76,15 @@ function followPages(mirador: MiradorGlobal, store: MiradorStore, startPage: num
   });
 }
 
-export default function MiradorViewer({ manifestUrl, iiifPage }: { manifestUrl: string; iiifPage: number }) {
+export default function MiradorViewer({
+  manifestUrl,
+  iiifPage,
+  continuous = false,
+}: {
+  manifestUrl: string;
+  iiifPage: number;
+  continuous?: boolean;
+}) {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -76,12 +98,18 @@ export default function MiradorViewer({ manifestUrl, iiifPage }: { manifestUrl: 
         const instance = mirador.viewer({
           id: "mirador",
           language: "ja",
-          windows: [{ manifestId: new URL(manifestUrl, window.location.href).href }],
+          windows: [
+            {
+              manifestId: new URL(manifestUrl, window.location.href).href,
+              ...(continuous && { view: "scroll" }),
+            },
+          ],
           window: {
             allowClose: false,
             allowMaximize: false,
             hideWindowTitle: true,
             sideBarOpen: false,
+            ...(continuous && { views: SCROLL_VIEWS }),
           },
           workspace: { type: "mosaic", allowNewWindows: false },
           workspaceControlPanel: { enabled: false },
@@ -101,7 +129,7 @@ export default function MiradorViewer({ manifestUrl, iiifPage }: { manifestUrl: 
       cancelled = true;
       cleanup();
     };
-  }, [manifestUrl, iiifPage]);
+  }, [manifestUrl, iiifPage, continuous]);
 
   if (failed) {
     return (

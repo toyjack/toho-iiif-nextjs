@@ -101,7 +101,12 @@ async function ViewerIndexPage({
         }}
       />
       <div className="min-h-0 flex-1">
-        <ViewerComp viewer={viewer} manifestUrl={manifestUrl} iiifPage={page} />
+        <ViewerComp
+          viewer={viewer}
+          manifestUrl={manifestUrl}
+          iiifPage={page}
+          continuous={book.behavior === "continuous"}
+        />
       </div>
     </div>
   );

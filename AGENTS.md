@@ -35,7 +35,7 @@
   - Tify（`tify.tsx`）：npm 包直接 import；日文翻译在 `public/i18n/tify/ja.json`；包装 Tify store 的 `updateOptions`；自带的标题列由 `globals.css` 隐藏（规则须放在 CSS 层之外，否则敌不过 Tify 的样式）。
   - Universal Viewer（`uv.tsx`）与 Mirador（`mirador.tsx`）不经 Next 打包：`scripts/copy-viewer-assets.ts`（`bun run assets`，`dev`/`build` 自动运行）把 `node_modules` 中的预构建文件复制到 `public/vendor/`（不入库），组件用 `vendor-assets.ts` 以 `<script>` 加载。UV 按自身脚本路径加载 chunk；Mirador 用自带 React/MUI 的 `mirador.min.js`（UMD 的导出是扁平的，如 `Mirador.setCanvas`，没有 `actions`）。
   - UV：`UV.init` 的 `canvasIndex` 定起始页，订阅 `canvasIndexChange` 回写；不用 `IIIFURLAdapter`（会另写 `#?cv=`）。UV 没有日文 locale，界面为英语。UV 会注入不分层的 `.hidden { display: none }`，阅读器页面上要响应式隐藏时用 `max-md:hidden` 之类，不要用 `hidden md:block`。
-  - Mirador：`language: "ja"`。没有起始索引选项而 canvas ID 依赖服务端基址，所以 `store.subscribe` 等窗口落在第一张 canvas 后再 `setCanvas` 到 `?page=` 指定页；之后由 `windows[*].canvasId` 与 `manifests[*].json.items` 换算页码回写。
+  - Mirador：`language: "ja"`。没有起始索引选项而 canvas ID 依赖服务端基址，所以 `store.subscribe` 等窗口落在第一张 canvas 后再 `setCanvas` 到 `?page=` 指定页；之后由 `windows[*].canvasId` 与 `manifests[*].json.items` 换算页码回写。卷子本（书目 `behavior: continuous`）直接以 scroll 视图打开，并让 scroll 视图不受 manifest behavior 限制：多卷卷子本的 manifest 是 `individuals`，Mirador 不看 Range 的 behavior，否则不会提供 scroll。scroll 视图把全部 canvas 拼成一条，各卷相连。Tify 与 UV 只按 manifest 整体的 behavior 判断，多卷卷子本在两者中按单页显示。
 - `src/app/globals.css`：Tailwind、DaisyUI 与 `chinese-classics` 主题（design tokens）。金色 `primary` 只作填充与线条，带颜色的文字用 `text-primary-text`（古銅）；辅助文字用 `text-muted`，不用 `text-base-content/70` 之类的透明度；控件边框用 `border-border-strong`；长文用 `.doc`。DaisyUI 的组件样式位于 `utilities` 层，覆盖它们的规则也写在该层。
 
 ## 开发与验证

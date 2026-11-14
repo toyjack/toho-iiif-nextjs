@@ -20,7 +20,22 @@ const VIEWER_COMPONENTS = {
   mirador: dynamic(() => import("./mirador"), { ssr: false, loading: Loading }),
 };
 
-function ViewerComp({ viewer, manifestUrl, iiifPage }: { viewer: ViewerKind; manifestUrl: string; iiifPage: number }) {
+function ViewerComp({
+  viewer,
+  manifestUrl,
+  iiifPage,
+  continuous,
+}: {
+  viewer: ViewerKind;
+  manifestUrl: string;
+  iiifPage: number;
+  /** 卷子本 (`behavior: continuous` in the book's data) */
+  continuous: boolean;
+}) {
+  if (viewer === "mirador") {
+    const Mirador = VIEWER_COMPONENTS.mirador;
+    return <Mirador iiifPage={iiifPage} manifestUrl={manifestUrl} continuous={continuous} />;
+  }
   const Viewer = VIEWER_COMPONENTS[viewer];
   return <Viewer iiifPage={iiifPage} manifestUrl={manifestUrl} />;
 }
