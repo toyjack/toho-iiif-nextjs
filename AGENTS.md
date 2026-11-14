@@ -60,7 +60,7 @@
 
 - 沿用相邻代码的格式和命名；新逻辑使用 TypeScript 与现有类型，优先使用 `@/` 导入。
 - 页面默认使用 Server Components；需要浏览器 API 或交互状态时才添加客户端边界。Route Handler 的 `params` 和页面的 `searchParams` 当前采用异步读取模式。
-- Tify 来自自定义分支 `github:toyjack/tify#dev`，不要在无关任务中替换为其他发行版。保持 `ViewerComp.tsx` 的 `ssr: false` 动态加载、浏览器端 `window.Tify` 初始化与卸载清理。
+- Tify 使用 npm 发行版（`tify`，见 `package.json`；过去的自定义分支 `toyjack/tify#dev` 所修的问题已在上游解决），升级时核对阅读器加载、翻页与日文翻译。保持 `ViewerComp.tsx` 的 `ssr: false` 动态加载、浏览器端 `window.Tify` 初始化与卸载清理。
 - 保留书目原文、旧字形、ID、卷册结构和外部链接。数据修订应有来源依据，避免推测性改写或批量规范化；修订记录写在书目文件正文的「数据修订」一节。
 - 卷册结构的原始来源是旧站 `http://kanji.zinbun.kyoto-u.ac.jp/db-machine/toho/html/` 下的目录页（书目 `url` 字段，相对该目录；部分书有二级目录 `…menuNN.html`）。各卷页面脚本中的 `volStartPos`、`volMaxPage` 对应 `startPage`、`maxPage`，链接文字对应卷题；卷轴（`../volumen/*.html`）按页面中图像列表计算。旧站个别数据有误（如 B010 第十二册），以实际图像为准。核对时逐个请求并间隔等待。
 - 修改 IIIF 时核对资源 ID、语言映射、`right-to-left`、归属与权利声明、图像服务 URL 编码、页数及卷册顺序；本地接口类型不能替代实际阅读器验证。

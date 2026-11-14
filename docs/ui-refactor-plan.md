@@ -200,7 +200,7 @@ B2 的排查思路：先在生产构建下确认是否复现；用 React 开发�
 
 - `ViewerComp.tsx` 的 `ssr: false` 动态加载
 - 浏览器端 `window.Tify` 初始化与卸载时的 `destroy()`
-- Tify 版本（`toyjack/tify#dev`）与日文翻译文件
+- Tify 版本（npm 发行版 `tify`；原为 `toyjack/tify#dev`）与日文翻译文件
 - `?book=` 与 `?page=` 参数、manifest URL
 
 **风险**

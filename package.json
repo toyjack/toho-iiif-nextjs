@@ -36,7 +36,6 @@
     "zod": "4.1.12"
   },
   "trustedDependencies": [
-    "@tailwindcss/oxide",
-    "tify"
+    "@tailwindcss/oxide"
   ]
 }
