@@ -31,7 +31,7 @@
 - `src/types/index.ts`：书目、卷册和 IIIF 类型；`@/*` 别名对应 `src/*`。
 - `src/components/`：共用 UI 组件，文件名 kebab-case，默认为 Server Component。主要有 `book-row`（书目表格行、窄屏行、卡片）、`filter-panel`、`pagination`、`dialog`（原生 `<dialog>`）、`notice`（空、错误、提示状态）、`page-header`、`field`、`icon`（全部功能图标，不引入图标库）、`external-link`、`stat-list`、`category-index`、`viewer-toolbar`、`book-info-dialog`。只在 `books.tsx` 等客户端组件内部使用的组件不写 `"use client"`。
 - UI 设计：`docs/ui-design-system.md`（tokens、组件规范、用语表）、`docs/ui-refactor-plan.md`（重构阶段与验收标准）、`docs/ui-audit.md`（改造前的审计）。界面用语与站名常量在 `src/lib/ui-text.ts`；首页与 `/about` 的统计和分类分组在 `src/lib/collection.ts`。
-- `src/app/viewer/`：Tify 集成；日文翻译在 `public/i18n/tify/ja.json`。有书时页面根元素为 `#reader`：`globals.css` 用 `body:has(#reader)` 隐藏站点页头与页脚，由 48px 的 `ViewerToolbar` 代替，Tify 高度由 flex 布局决定；Tify 自带的标题列也由 `globals.css` 隐藏（规则须放在 CSS 层之外，否则敌不过 Tify 的样式）。工具栏的「漢籍一覧」链接经 `src/lib/last-list.ts` 回到上次的列表 URL。
+- `src/app/viewer/`：Tify 集成；日文翻译在 `public/i18n/tify/ja.json`。有书时页面根元素为 `#reader`：`globals.css` 用 `body:has(#reader)` 隐藏站点页头与页脚，由 48px 的 `ViewerToolbar` 代替，Tify 高度由 flex 布局决定；Tify 自带的标题列也由 `globals.css` 隐藏（规则须放在 CSS 层之外，否则敌不过 Tify 的样式）。工具栏的「漢籍一覧」链接经 `src/lib/last-list.ts` 回到上次的列表 URL。翻页时 `tify.tsx` 包装 Tify store 的 `updateOptions`，用 `replaceState` 把当前页写回 `?page=`（第 1 页时去掉该参数；辅助函数在 `src/lib/viewer-params.ts`），升级 Tify 时需确认该内部接口仍在。
 - `src/app/globals.css`：Tailwind、DaisyUI 与 `chinese-classics` 主题（design tokens）。金色 `primary` 只作填充与线条，带颜色的文字用 `text-primary-text`（古銅）；辅助文字用 `text-muted`，不用 `text-base-content/70` 之类的透明度；控件边框用 `border-border-strong`；长文用 `.doc`。DaisyUI 的组件样式位于 `utilities` 层，覆盖它们的规则也写在该层。
 
 ## 开发与验证

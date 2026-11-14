@@ -9,3 +9,20 @@ export function parsePage(value: string | undefined, pageCount: number): number 
   if (!Number.isFinite(page) || page < 1) return 1;
   return Math.max(1, Math.min(page, pageCount));
 }
+
+/**
+ * The page to keep in `?page=` for the pages Tify shows: the lowest real
+ * page (a two-page view may include 0 for an empty slot). Null when none.
+ */
+export function pageFromTifyPages(pages: readonly number[] | undefined): number | null {
+  const real = (pages ?? []).filter((p) => Number.isInteger(p) && p > 0);
+  return real.length > 0 ? Math.min(...real) : null;
+}
+
+/** `href` with `page` set, other parameters and the hash kept; page 1 drops it. */
+export function withPageParam(href: string, page: number): string {
+  const url = new URL(href);
+  if (page > 1) url.searchParams.set("page", String(page));
+  else url.searchParams.delete("page");
+  return url.toString();
+}
