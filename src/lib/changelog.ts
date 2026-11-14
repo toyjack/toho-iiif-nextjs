@@ -61,6 +61,12 @@ export const FEATURE_CHANGES: ChangelogEntry[] = [
 
 export const CONTENT_CHANGES: ChangelogEntry[] = [
   {
+    date: "2026-11-14",
+    items: [
+      "松本文庫の 19 部（M009・M010・M019・M027・M028・M037・M042・M043・M044・M045・M046・M049・M058・M070・M080・M084・M085・M086・M087）を巻子本とし、マニフェストに behavior（continuous）を付けました。",
+    ],
+  },
+  {
     date: "2026-11-12",
     items: [
       "旧サイトで公開されている漢籍を追加し、収録は 335 部から 714 部、うち閲覧可能は 307 部から 683 部になりました。",
