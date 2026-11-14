@@ -3,7 +3,7 @@
 import "tify/dist/tify.css";
 import "tify";
 import { useEffect } from "react";
-import { pageFromTifyPages, withPageParam } from "@/lib/viewer-params";
+import { pageFromTifyPages, replacePageParam } from "@/lib/viewer-params";
 
 type TifyOptions = { pages?: number[] };
 
@@ -25,10 +25,7 @@ function syncPageParam(store: TifyStore) {
   store.updateOptions = (options) => {
     const result = update(options);
     const page = pageFromTifyPages(options?.pages);
-    if (page !== null) {
-      const href = withPageParam(window.location.href, page);
-      if (href !== window.location.href) window.history.replaceState(window.history.state, "", href);
-    }
+    if (page !== null) replacePageParam(page);
     return result;
   };
 }

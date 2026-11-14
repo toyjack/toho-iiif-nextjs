@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { UI } from "@/lib/ui-text";
+import type { ViewerKind } from "@/lib/viewer-params";
 
 function Loading() {
   return (
@@ -11,11 +12,17 @@ function Loading() {
   );
 }
 
-// Tify touches window on import, so it is only ever loaded in the browser.
-const TifyViewer = dynamic(() => import("./tify"), { ssr: false, loading: Loading });
+// Each viewer touches window on import and is only loaded in the browser,
+// and only when chosen.
+const VIEWER_COMPONENTS = {
+  tify: dynamic(() => import("./tify"), { ssr: false, loading: Loading }),
+  uv: dynamic(() => import("./uv"), { ssr: false, loading: Loading }),
+  mirador: dynamic(() => import("./mirador"), { ssr: false, loading: Loading }),
+};
 
-function ViewerComp({ manifestUrl, iiifPage }: { manifestUrl: string; iiifPage: number }) {
-  return <TifyViewer iiifPage={iiifPage} manifestUrl={manifestUrl} />;
+function ViewerComp({ viewer, manifestUrl, iiifPage }: { viewer: ViewerKind; manifestUrl: string; iiifPage: number }) {
+  const Viewer = VIEWER_COMPONENTS[viewer];
+  return <Viewer iiifPage={iiifPage} manifestUrl={manifestUrl} />;
 }
 
 export default ViewerComp;

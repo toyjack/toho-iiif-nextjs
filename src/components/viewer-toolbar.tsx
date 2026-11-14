@@ -1,14 +1,16 @@
 import { UI } from "@/lib/ui-text";
+import type { ViewerKind } from "@/lib/viewer-params";
 import BackToList from "./back-to-list";
 import BookInfoDialog, { type BookInfo } from "./book-info-dialog";
 import ExternalLink from "./external-link";
+import ViewerSwitch from "./viewer-switch";
 
 /**
  * The reader's single 48px bar (§4.6), replacing the site header:
- * [← 漢籍一覧]  書名 · 著者            [IIIF マニフェスト ↗] [書誌情報]
+ * [← 漢籍一覧]  書名 · 著者     [ビューア ▾] [IIIF マニフェスト ↗] [書誌情報]
  * The title is the page's only <h1>; Tify's own title heading is hidden in globals.css.
  */
-export default function ViewerToolbar({ info }: { info: BookInfo }) {
+export default function ViewerToolbar({ info, viewer }: { info: BookInfo; viewer: ViewerKind }) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-1 border-b border-base-300 bg-base-100 px-2 sm:gap-2 sm:px-3">
       <BackToList />
@@ -17,11 +19,13 @@ export default function ViewerToolbar({ info }: { info: BookInfo }) {
           {info.title}
         </h1>
         {info.authors.length > 0 && (
-          <p className="hidden truncate text-[0.8125rem] text-muted md:block">{info.authors.join("、")}</p>
+          <p className="truncate text-[0.8125rem] text-muted max-md:hidden">{info.authors.join("、")}</p>
         )}
       </div>
-      {/* wrapper toggles display: ExternalLink sets inline-flex itself; the dialog has the link on small screens */}
-      <span className="hidden shrink-0 md:block">
+      <ViewerSwitch current={viewer} />
+      {/* wrapper toggles display: ExternalLink sets inline-flex itself; the dialog has the link on small screens.
+          max-md:hidden, not hidden md:block: Universal Viewer injects an unlayered `.hidden` rule. */}
+      <span className="shrink-0 max-md:hidden">
         <ExternalLink href={info.manifestPath} className="btn btn-ghost btn-sm px-2 font-normal">
           {UI.manifest}
         </ExternalLink>

@@ -8,18 +8,21 @@
   },
   "scripts": {
     "data": "bun scripts/build-data.ts",
-    "dev": "bun run data && bun --bun next dev",
-    "build": "bun run data && bun --bun next build",
+    "assets": "bun scripts/copy-viewer-assets.ts",
+    "dev": "bun run data && bun run assets && bun --bun next dev",
+    "build": "bun run data && bun run assets && bun --bun next build",
     "start": "bun --bun next start",
     "typecheck": "bun run data && tsc --noEmit",
     "test": "bun run data && bun test",
     "lint": "eslint src scripts"
   },
   "dependencies": {
+    "mirador": "4.3.0",
     "next": "16.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tify": "^0.36.2"
+    "tify": "^0.36.2",
+    "universalviewer": "4.4.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

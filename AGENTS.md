@@ -31,7 +31,11 @@
 - `src/types/index.ts`：书目、卷册和 IIIF 类型；`@/*` 别名对应 `src/*`。
 - `src/components/`：共用 UI 组件，文件名 kebab-case，默认为 Server Component。主要有 `book-row`（书目表格行、窄屏行、卡片）、`filter-panel`、`pagination`、`dialog`（原生 `<dialog>`）、`notice`（空、错误、提示状态）、`page-header`、`field`、`icon`（全部功能图标，不引入图标库）、`external-link`、`stat-list`、`category-index`、`viewer-toolbar`、`book-info-dialog`。只在 `books.tsx` 等客户端组件内部使用的组件不写 `"use client"`。
 - UI 设计：`docs/ui-design-system.md`（tokens、组件规范、用语表）、`docs/ui-refactor-plan.md`（重构阶段与验收标准）、`docs/ui-audit.md`（改造前的审计）。界面用语与站名常量在 `src/lib/ui-text.ts`；首页与 `/about` 的统计和分类分组在 `src/lib/collection.ts`。
-- `src/app/viewer/`：Tify 集成；日文翻译在 `public/i18n/tify/ja.json`。有书时页面根元素为 `#reader`：`globals.css` 用 `body:has(#reader)` 隐藏站点页头与页脚，由 48px 的 `ViewerToolbar` 代替，Tify 高度由 flex 布局决定；Tify 自带的标题列也由 `globals.css` 隐藏（规则须放在 CSS 层之外，否则敌不过 Tify 的样式）。工具栏的「漢籍一覧」链接经 `src/lib/last-list.ts` 回到上次的列表 URL。翻页时 `tify.tsx` 包装 Tify store 的 `updateOptions`，用 `replaceState` 把当前页写回 `?page=`（第 1 页时去掉该参数；辅助函数在 `src/lib/viewer-params.ts`），升级 Tify 时需确认该内部接口仍在。
+- `src/app/viewer/`：三种 IIIF viewer，由 `?viewer=tify|uv|mirador` 选择（缺省或未知值为 Tify，`parseViewer` 在 `src/lib/viewer-params.ts`）；`ViewerComp.tsx` 按需以 `ssr: false` 动态加载对应组件，未选中的不下载。工具栏的 `viewer-switch` 切换时整页重载并带上 `?page=`。有书时页面根元素为 `#reader`：`globals.css` 用 `body:has(#reader)` 隐藏站点页头与页脚，由 48px 的 `ViewerToolbar` 代替，viewer 高度由 flex 布局决定。工具栏的「漢籍一覧」链接经 `src/lib/last-list.ts` 回到上次的列表 URL。三种 viewer 翻页时都用 `replacePageParam`（`replaceState`）把当前页写回 `?page=`（第 1 页时去掉该参数），各自依赖非 typed 的内部接口，升级时需确认仍在：
+  - Tify（`tify.tsx`）：npm 包直接 import；日文翻译在 `public/i18n/tify/ja.json`；包装 Tify store 的 `updateOptions`；自带的标题列由 `globals.css` 隐藏（规则须放在 CSS 层之外，否则敌不过 Tify 的样式）。
+  - Universal Viewer（`uv.tsx`）与 Mirador（`mirador.tsx`）不经 Next 打包：`scripts/copy-viewer-assets.ts`（`bun run assets`，`dev`/`build` 自动运行）把 `node_modules` 中的预构建文件复制到 `public/vendor/`（不入库），组件用 `vendor-assets.ts` 以 `<script>` 加载。UV 按自身脚本路径加载 chunk；Mirador 用自带 React/MUI 的 `mirador.min.js`（UMD 的导出是扁平的，如 `Mirador.setCanvas`，没有 `actions`）。
+  - UV：`UV.init` 的 `canvasIndex` 定起始页，订阅 `canvasIndexChange` 回写；不用 `IIIFURLAdapter`（会另写 `#?cv=`）。UV 没有日文 locale，界面为英语。UV 会注入不分层的 `.hidden { display: none }`，阅读器页面上要响应式隐藏时用 `max-md:hidden` 之类，不要用 `hidden md:block`。
+  - Mirador：`language: "ja"`。没有起始索引选项而 canvas ID 依赖服务端基址，所以 `store.subscribe` 等窗口落在第一张 canvas 后再 `setCanvas` 到 `?page=` 指定页；之后由 `windows[*].canvasId` 与 `manifests[*].json.items` 换算页码回写。
 - `src/app/globals.css`：Tailwind、DaisyUI 与 `chinese-classics` 主题（design tokens）。金色 `primary` 只作填充与线条，带颜色的文字用 `text-primary-text`（古銅）；辅助文字用 `text-muted`，不用 `text-base-content/70` 之类的透明度；控件边框用 `border-border-strong`；长文用 `.doc`。DaisyUI 的组件样式位于 `utilities` 层，覆盖它们的规则也写在该层。
 
 ## 开发与验证
@@ -61,7 +65,7 @@
 
 - 沿用相邻代码的格式和命名；新逻辑使用 TypeScript 与现有类型，优先使用 `@/` 导入。
 - 页面默认使用 Server Components；需要浏览器 API 或交互状态时才添加客户端边界。Route Handler 的 `params` 和页面的 `searchParams` 当前采用异步读取模式。
-- Tify 使用 npm 发行版（`tify`，见 `package.json`；过去的自定义分支 `toyjack/tify#dev` 所修的问题已在上游解决），升级时核对阅读器加载、翻页与日文翻译。保持 `ViewerComp.tsx` 的 `ssr: false` 动态加载、浏览器端 `window.Tify` 初始化与卸载清理。
+- Tify 使用 npm 发行版（`tify`，见 `package.json`；过去的自定义分支 `toyjack/tify#dev` 所修的问题已在上游解决），升级时核对阅读器加载、翻页与日文翻译。保持 `ViewerComp.tsx` 的 `ssr: false` 动态加载、浏览器端 `window.Tify` 初始化与卸载清理。升级 `universalviewer`、`mirador` 时同样核对加载、起始页、翻页回写与卸载，版本固定在 `package.json`。
 - 保留书目原文、旧字形、ID、卷册结构和外部链接。数据修订应有来源依据，避免推测性改写或批量规范化；修订记录写在书目文件正文的「数据修订」一节。
 - 卷册结构的原始来源是旧站 `http://kanji.zinbun.kyoto-u.ac.jp/db-machine/toho/html/` 下的目录页（书目 `url` 字段，相对该目录；部分书有二级目录 `…menuNN.html`）。各卷页面脚本中的 `volStartPos`、`volMaxPage` 对应 `startPage`、`maxPage`，链接文字对应卷题；卷轴（`../volumen/*.html`）按页面中图像列表计算。旧站个别数据有误（如 B010 第十二册），以实际图像为准。核对时逐个请求并间隔等待。
 - 修改 IIIF 时核对资源 ID、语言映射、`right-to-left`、归属与权利声明、图像服务 URL 编码、页数及卷册顺序；本地接口类型不能替代实际阅读器验证。

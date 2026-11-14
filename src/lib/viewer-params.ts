@@ -26,3 +26,41 @@ export function withPageParam(href: string, page: number): string {
   else url.searchParams.delete("page");
   return url.toString();
 }
+
+/** The IIIF viewers the reader offers; the first is the default. */
+export const VIEWERS = ["tify", "uv", "mirador"] as const;
+export type ViewerKind = (typeof VIEWERS)[number];
+
+/** `?viewer=` value; missing or unknown → Tify. */
+export function parseViewer(value: string | undefined): ViewerKind {
+  return VIEWERS.find((viewer) => viewer === value) ?? "tify";
+}
+
+/** `href` with `viewer` set, other parameters and the hash kept; Tify (the default) drops it. */
+export function withViewerParam(href: string, viewer: ViewerKind): string {
+  const url = new URL(href);
+  if (viewer === VIEWERS[0]) url.searchParams.delete("viewer");
+  else url.searchParams.set("viewer", viewer);
+  return url.toString();
+}
+
+/** 1-based page for a 0-based canvas index (Universal Viewer); null when invalid. */
+export function pageFromCanvasIndex(index: unknown): number | null {
+  return typeof index === "number" && Number.isInteger(index) && index >= 0 ? index + 1 : null;
+}
+
+/** 1-based page of `canvasId` among the manifest's canvases (Mirador); null when absent. */
+export function pageFromCanvasId(canvasIds: readonly string[], canvasId: string | undefined): number | null {
+  if (!canvasId) return null;
+  const index = canvasIds.indexOf(canvasId);
+  return index < 0 ? null : index + 1;
+}
+
+/**
+ * Write `page` into the address bar's `?page=` without a history entry or a
+ * re-render. Shared by every viewer; browser only.
+ */
+export function replacePageParam(page: number): void {
+  const href = withPageParam(window.location.href, page);
+  if (href !== window.location.href) window.history.replaceState(window.history.state, "", href);
+}

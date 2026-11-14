@@ -58,6 +58,8 @@ export const UI = {
   publication: "出版事項",
   collection: "所蔵",
   loadingImages: "画像を読み込んでいます…",
+  viewer: "ビューア",
+  viewerLoadError: "ビューアを読み込めませんでした。ページを再読み込みするか、別のビューアをお試しください。",
   changelog: "更新履歴",
 } as const;
 

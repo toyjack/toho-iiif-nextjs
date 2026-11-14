@@ -41,7 +41,7 @@ function AboutPage() {
         <h2>IIIF による利用</h2>
         <p>
           画像は京都大学人文科学研究所の IIIF Image API サーバーから配信されます。各漢籍には IIIF Presentation API 3.0
-          形式のマニフェストを用意しており、本サイトのビューア（Tify）のほか、IIIF に対応した任意のビューアで閲覧できます。
+          形式のマニフェストを用意しており、本サイトのビューア（Tify・Universal Viewer・Mirador から選択）のほか、IIIF に対応した任意のビューアで閲覧できます。
         </p>
         <dl
           tabIndex={0}

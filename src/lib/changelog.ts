@@ -13,6 +13,7 @@ export const FEATURE_CHANGES: ChangelogEntry[] = [
   {
     date: "2026-11-14",
     items: [
+      "ビューアを Tify・Universal Viewer・Mirador から選べるようにしました（ツールバーの「ビューア」で切り替え、表示中のページを引き継ぎます）。",
       "巻子本のマニフェストに IIIF の behavior（continuous）を付け、対応するビューアで巻ごとに画像をつなげて表示できるようにしました。",
       "ビューアでページをめくると、URL の page パラメータも更新されるようにしました（再読み込みや URL の共有で同じページを開けます）。",
     ],

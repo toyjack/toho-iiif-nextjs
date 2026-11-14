@@ -7,11 +7,12 @@ import ViewerToolbar from "@/components/viewer-toolbar";
 import { bookTypeLabel } from "@/lib/book-type";
 import { getBook } from "@/lib/books";
 import { getImages } from "@/lib/generate-manifest";
-import { firstParam as first, parsePage } from "@/lib/viewer-params";
+import { firstParam as first, parsePage, parseViewer } from "@/lib/viewer-params";
 
 type SearchParams = Promise<{
   book?: string | string[];
   page?: string | string[];
+  viewer?: string | string[];
 }>;
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
@@ -76,12 +77,14 @@ async function ViewerIndexPage({
   }
 
   const page = parsePage(first(params.page), getImages(book).length);
+  const viewer = parseViewer(first(params.viewer));
   const manifestUrl = `/manifest/${encodeURIComponent(book.id)}/manifest.json`;
 
   return (
     // #reader hides the site header and footer (globals.css) and fills the viewport.
     <div id="reader" className="flex h-dvh flex-col">
       <ViewerToolbar
+        viewer={viewer}
         info={{
           id: book.id,
           title: book.title,
@@ -98,7 +101,7 @@ async function ViewerIndexPage({
         }}
       />
       <div className="min-h-0 flex-1">
-        <ViewerComp manifestUrl={manifestUrl} iiifPage={page} />
+        <ViewerComp viewer={viewer} manifestUrl={manifestUrl} iiifPage={page} />
       </div>
     </div>
   );
